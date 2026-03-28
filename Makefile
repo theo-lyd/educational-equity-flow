@@ -1,0 +1,36 @@
+PYTHON ?= python
+VENV_PYTHON ?= .venv/bin/python
+
+.PHONY: setup-venv setup-venv-req install lint format test ingest dbt-run app
+
+setup-venv:
+	(python3 -m venv .venv || virtualenv .venv)
+	$(VENV_PYTHON) -m pip install --upgrade pip
+	$(VENV_PYTHON) -m pip install -e ".[dev]"
+
+setup-venv-req:
+	(python3 -m venv .venv || virtualenv .venv)
+	$(VENV_PYTHON) -m pip install --upgrade pip
+	$(VENV_PYTHON) -m pip install -r requirements-dev.txt
+
+install:
+	$(PYTHON) -m pip install --upgrade pip
+	$(PYTHON) -m pip install -e ".[dev]"
+
+lint:
+	$(PYTHON) -m ruff check src tests app
+
+format:
+	$(PYTHON) -m black src tests app
+
+test:
+	$(PYTHON) -m pytest
+
+ingest:
+	$(PYTHON) -m src.ingestion.run --source data/raw --target data/bronze
+
+dbt-run:
+	$(PYTHON) -m src.tools.dbt_runner run
+
+app:
+	streamlit run app/main.py
