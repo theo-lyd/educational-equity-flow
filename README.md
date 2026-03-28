@@ -28,7 +28,9 @@ make app
 Important: pick one setup path (`setup-venv` or `setup-venv-req`). Do not run both in sequence for the same environment.
 
 Notes:
-- `make ingest` runs a baseline smoke ingestion entrypoint and writes `warehouse/artifacts/ingest_smoke.json`.
+- `make ingest` runs the Phase 04 Bronze ingestion and writes `warehouse/artifacts/ingest_bronze.json`.
+- Bronze output is written as partitioned parquet under `data/bronze/dataset=<dataset>/year=<year>/`.
+- Incremental/idempotent behavior is tracked in `data/bronze/ingestion_manifest.json`.
 - `make dbt-run` is wired and will no-op until dbt project files are implemented in later phases.
 
 ## Project Execution Guide

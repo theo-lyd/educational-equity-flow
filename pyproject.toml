@@ -13,6 +13,7 @@ dependencies = [
   "duckdb==1.1.3",
   "polars==1.9.0",
   "pandas==2.2.3",
+  "openpyxl==3.1.5",
   "pyarrow==17.0.0",
   "dbt-duckdb==1.8.2",
   "great-expectations==0.18.21",
@@ -43,6 +44,9 @@ select = ["E", "F", "I", "B", "UP"]
 pythonpath = ["."]
 addopts = "-q"
 testpaths = ["tests"]
+filterwarnings = [
+  "ignore:Workbook contains no default style, apply openpyxl's default:UserWarning"
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

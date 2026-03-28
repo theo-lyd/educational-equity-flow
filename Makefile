@@ -1,5 +1,5 @@
-PYTHON ?= python
 VENV_PYTHON ?= .venv/bin/python
+PYTHON ?= $(if $(wildcard $(VENV_PYTHON)),$(VENV_PYTHON),python)
 
 .PHONY: setup-venv setup-venv-req install lint format test ingest profile-phase03 dbt-run app
 
