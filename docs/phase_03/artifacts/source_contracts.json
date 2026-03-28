@@ -1,0 +1,253 @@
+{
+  "21111-01-03-4-B.xlsx": {
+    "file": "21111-01-03-4-B.xlsx",
+    "file_type": "xlsx",
+    "required_dimension_candidates": [
+      "jahr"
+    ],
+    "required_rules": {
+      "must_include_geo_key": [
+        "AGS",
+        "KREISE"
+      ],
+      "must_include_time_key": [
+        "JAHR"
+      ],
+      "accepted_quality_markers": [
+        "-",
+        ".",
+        "x",
+        "X",
+        "e"
+      ]
+    },
+    "ingestion_hints": {
+      "normalize_ags_to_5_digits": true,
+      "normalize_abbreviations": [
+        "dar.",
+        "Mio",
+        "K"
+      ],
+      "drop_metadata_rows_before_header": true
+    }
+  },
+  "21111-01-03-4.xlsx": {
+    "file": "21111-01-03-4.xlsx",
+    "file_type": "xlsx",
+    "required_dimension_candidates": [
+      "jahr"
+    ],
+    "required_rules": {
+      "must_include_geo_key": [
+        "AGS",
+        "KREISE"
+      ],
+      "must_include_time_key": [
+        "JAHR"
+      ],
+      "accepted_quality_markers": [
+        "-",
+        ".",
+        "x",
+        "X",
+        "e"
+      ]
+    },
+    "ingestion_hints": {
+      "normalize_ags_to_5_digits": true,
+      "normalize_abbreviations": [
+        "dar.",
+        "Mio",
+        "K"
+      ],
+      "drop_metadata_rows_before_header": true
+    }
+  },
+  "21111-02-06-4-B.csv": {
+    "file": "21111-02-06-4-B.csv",
+    "file_type": "csv",
+    "required_dimension_candidates": [],
+    "required_rules": {
+      "must_include_geo_key": [
+        "AGS",
+        "KREISE"
+      ],
+      "must_include_time_key": [
+        "JAHR"
+      ],
+      "accepted_quality_markers": [
+        "-",
+        ".",
+        "x",
+        "X",
+        "e"
+      ]
+    },
+    "ingestion_hints": {
+      "normalize_ags_to_5_digits": true,
+      "normalize_abbreviations": [
+        "dar.",
+        "Mio",
+        "K"
+      ],
+      "drop_metadata_rows_before_header": true
+    }
+  },
+  "21111-02-06-4.csv": {
+    "file": "21111-02-06-4.csv",
+    "file_type": "csv",
+    "required_dimension_candidates": [],
+    "required_rules": {
+      "must_include_geo_key": [
+        "AGS",
+        "KREISE"
+      ],
+      "must_include_time_key": [
+        "JAHR"
+      ],
+      "accepted_quality_markers": [
+        "-",
+        ".",
+        "x",
+        "X",
+        "e"
+      ]
+    },
+    "ingestion_hints": {
+      "normalize_ags_to_5_digits": true,
+      "normalize_abbreviations": [
+        "dar.",
+        "Mio",
+        "K"
+      ],
+      "drop_metadata_rows_before_header": true
+    }
+  },
+  "21311-01-01-4-B.csv": {
+    "file": "21311-01-01-4-B.csv",
+    "file_type": "csv",
+    "required_dimension_candidates": [
+      "geschlecht"
+    ],
+    "required_rules": {
+      "must_include_geo_key": [
+        "AGS",
+        "KREISE"
+      ],
+      "must_include_time_key": [
+        "JAHR"
+      ],
+      "accepted_quality_markers": [
+        "-",
+        ".",
+        "x",
+        "X",
+        "e"
+      ]
+    },
+    "ingestion_hints": {
+      "normalize_ags_to_5_digits": true,
+      "normalize_abbreviations": [
+        "dar.",
+        "Mio",
+        "K"
+      ],
+      "drop_metadata_rows_before_header": true
+    }
+  },
+  "21311-01-01-4.xlsx": {
+    "file": "21311-01-01-4.xlsx",
+    "file_type": "xlsx",
+    "required_dimension_candidates": [],
+    "required_rules": {
+      "must_include_geo_key": [
+        "AGS",
+        "KREISE"
+      ],
+      "must_include_time_key": [
+        "JAHR"
+      ],
+      "accepted_quality_markers": [
+        "-",
+        ".",
+        "x",
+        "X",
+        "e"
+      ]
+    },
+    "ingestion_hints": {
+      "normalize_ags_to_5_digits": true,
+      "normalize_abbreviations": [
+        "dar.",
+        "Mio",
+        "K"
+      ],
+      "drop_metadata_rows_before_header": true
+    }
+  },
+  "21321-01-01-4-B.xml": {
+    "file": "21321-01-01-4-B.xml",
+    "file_type": "xml",
+    "required_dimension_candidates": [
+      "GESINS",
+      "HS-FG2",
+      "JAHR",
+      "KREISE"
+    ],
+    "required_rules": {
+      "must_include_geo_key": [
+        "AGS",
+        "KREISE"
+      ],
+      "must_include_time_key": [
+        "JAHR"
+      ],
+      "accepted_quality_markers": [
+        "-",
+        ".",
+        "x",
+        "X",
+        "e"
+      ]
+    },
+    "ingestion_hints": {
+      "normalize_ags_to_5_digits": true,
+      "normalize_abbreviations": [
+        "dar.",
+        "Mio",
+        "K"
+      ],
+      "drop_metadata_rows_before_header": true
+    }
+  },
+  "21321-01-01-4_flat.csv": {
+    "file": "21321-01-01-4_flat.csv",
+    "file_type": "csv",
+    "required_dimension_candidates": [],
+    "required_rules": {
+      "must_include_geo_key": [
+        "AGS",
+        "KREISE"
+      ],
+      "must_include_time_key": [
+        "JAHR"
+      ],
+      "accepted_quality_markers": [
+        "-",
+        ".",
+        "x",
+        "X",
+        "e"
+      ]
+    },
+    "ingestion_hints": {
+      "normalize_ags_to_5_digits": true,
+      "normalize_abbreviations": [
+        "dar.",
+        "Mio",
+        "K"
+      ],
+      "drop_metadata_rows_before_header": true
+    }
+  }
+}

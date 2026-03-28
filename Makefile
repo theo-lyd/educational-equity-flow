@@ -1,7 +1,7 @@
 PYTHON ?= python
 VENV_PYTHON ?= .venv/bin/python
 
-.PHONY: setup-venv setup-venv-req install lint format test ingest dbt-run app
+.PHONY: setup-venv setup-venv-req install lint format test ingest profile-phase03 dbt-run app
 
 setup-venv:
 	(python3 -m venv .venv || virtualenv .venv)
@@ -28,6 +28,9 @@ test:
 
 ingest:
 	$(PYTHON) -m src.ingestion.run --source data/raw --target data/bronze
+
+profile-phase03:
+	$(PYTHON) -m src.profiling.profile_raw_sources --raw-dir data/raw --out-dir docs/phase_03/artifacts
 
 dbt-run:
 	$(PYTHON) -m src.tools.dbt_runner run

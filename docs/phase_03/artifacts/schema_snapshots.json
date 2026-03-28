@@ -1,0 +1,717 @@
+{
+  "generated_utc": "2026-03-28T03:51:34.488818+00:00",
+  "raw_directory": "data/raw",
+  "profile_count": 8,
+  "profiles": {
+    "21111-01-03-4-B.xlsx": {
+      "file_type": "xlsx",
+      "sheet_name": "21111-01-03-4-B",
+      "header_row_index": 4,
+      "columns": [
+        "Insgesamt",
+        "weiblich",
+        "auslndisch",
+        "7_Klassenstufe",
+        "11_Jahrgangsstufe__Einfhrungsphase"
+      ],
+      "sample_data_rows": [
+        [
+          "",
+          "",
+          "",
+          "Anzahl",
+          "Anzahl",
+          "Anzahl",
+          "Anzahl",
+          "Anzahl",
+          "Anzahl"
+        ],
+        [
+          "2024",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "01001",
+          "Flensburg, kreisfreie Stadt",
+          "Vorschulbereich",
+          "-",
+          "-",
+          "-",
+          "-",
+          "x",
+          "x"
+        ],
+        [
+          "",
+          "",
+          "Grundschulen",
+          "24.0",
+          "3489.0",
+          "1650.0",
+          "900.0",
+          "x",
+          "x"
+        ],
+        [
+          "",
+          "",
+          "Schulartunabh\u00e4ngige Orientierungsstufe",
+          "-",
+          "-",
+          "-",
+          "-",
+          "x",
+          "x"
+        ],
+        [
+          "",
+          "",
+          "Hauptschulen",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "x"
+        ],
+        [
+          "",
+          "",
+          "Schularten mit zwei Bildungsg\u00e4ngen",
+          "-",
+          "-",
+          "-",
+          "-",
+          "-",
+          "x"
+        ]
+      ]
+    },
+    "21111-01-03-4.xlsx": {
+      "file_type": "xlsx",
+      "sheet_name": "21111-01-03-4",
+      "header_row_index": 4,
+      "columns": [
+        "Insgesamt",
+        "weiblich",
+        "auslndisch",
+        "7_Klassenstufe",
+        "11_Jahrgangsstufe__Einfhrungsphase"
+      ],
+      "sample_data_rows": [
+        [
+          "",
+          "",
+          "",
+          "Anzahl",
+          "Anzahl",
+          "Anzahl",
+          "Anzahl",
+          "Anzahl",
+          "Anzahl"
+        ],
+        [
+          "2024",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "DG",
+          "Deutschland",
+          "Vorschulbereich",
+          "1218.0",
+          "28574.0",
+          "11710.0",
+          "8955.0",
+          "x",
+          "x"
+        ],
+        [
+          "",
+          "",
+          "Grundschulen",
+          "15566.0",
+          "3161028.0",
+          "1560339.0",
+          "534597.0",
+          "x",
+          "x"
+        ],
+        [
+          "",
+          "",
+          "Schulartunabh\u00e4ngige Orientierungsstufe",
+          "1078.0",
+          "122033.0",
+          "59250.0",
+          "24501.0",
+          "x",
+          "x"
+        ],
+        [
+          "",
+          "",
+          "Hauptschulen",
+          "749.0",
+          "132221.0",
+          "57174.0",
+          "53769.0",
+          "25227.0",
+          "x"
+        ],
+        [
+          "",
+          "",
+          "Schularten mit zwei Bildungsg\u00e4ngen",
+          "2747.0",
+          "710516.0",
+          "329290.0",
+          "149400.0",
+          "123798.0",
+          "x"
+        ]
+      ]
+    },
+    "21111-02-06-4-B.csv": {
+      "file_type": "csv",
+      "encoding": "iso-8859-1",
+      "delimiter": ";",
+      "header_row_index": 1,
+      "data_start_row_index": 8,
+      "metadata_lines_between_header_and_data": 6,
+      "columns": [
+        "AbsolvierendeAbgehende_allgemeinbildender_Schulen_nach"
+      ],
+      "inferred_types": {
+        "AbsolvierendeAbgehende_allgemeinbildender_Schulen_nach": "year"
+      },
+      "quality_markers_seen": {
+        "-": 30,
+        ".": 84
+      }
+    },
+    "21111-02-06-4.csv": {
+      "file_type": "csv",
+      "encoding": "iso-8859-1",
+      "delimiter": ";",
+      "header_row_index": 1,
+      "data_start_row_index": 9,
+      "metadata_lines_between_header_and_data": 7,
+      "columns": [
+        "AbsolvierendeAbgehende_allgemeinbildender_Schulen_nach"
+      ],
+      "inferred_types": {
+        "AbsolvierendeAbgehende_allgemeinbildender_Schulen_nach": "year"
+      },
+      "quality_markers_seen": {
+        "-": 30,
+        ".": 80
+      }
+    },
+    "21311-01-01-4-B.csv": {
+      "file_type": "csv",
+      "encoding": "iso-8859-1",
+      "delimiter": ";",
+      "header_row_index": 1,
+      "data_start_row_index": 5,
+      "metadata_lines_between_header_and_data": 3,
+      "columns": [
+        "Studierende_nach_Geschlecht_Nationalitt_und"
+      ],
+      "inferred_types": {
+        "Studierende_nach_Geschlecht_Nationalitt_und": "integer"
+      },
+      "quality_markers_seen": {
+        "-": 269
+      }
+    },
+    "21311-01-01-4.xlsx": {
+      "file_type": "xlsx",
+      "sheet_name": "21311-01-01-4",
+      "header_row_index": 5,
+      "columns": [
+        "Insgesamt",
+        "deutsch",
+        "auslndisch",
+        "Insgesamt",
+        "deutsch",
+        "auslndisch",
+        "Insgesamt",
+        "deutsch",
+        "auslndisch"
+      ],
+      "sample_data_rows": [
+        [
+          "DG",
+          "Deutschland",
+          "Geisteswissenschaften",
+          "297498.0",
+          "257768.0",
+          "39730.0",
+          "97074.0",
+          "84050.0",
+          "13024.0",
+          "200424.0",
+          "173718.0",
+          "26706.0"
+        ],
+        [
+          "",
+          "",
+          "Sport",
+          "31252.0",
+          "29435.0",
+          "1817.0",
+          "19073.0",
+          "17986.0",
+          "1087.0",
+          "12179.0",
+          "11449.0",
+          "730.0"
+        ],
+        [
+          "",
+          "",
+          "Rechts-, Wirtschafts- und Sozialwissenschaften",
+          "1116624.0",
+          "987572.0",
+          "129052.0",
+          "459427.0",
+          "405297.0",
+          "54130.0",
+          "657197.0",
+          "582275.0",
+          "74922.0"
+        ],
+        [
+          "",
+          "",
+          "Mathematik/Naturwissenschaften",
+          "301194.0",
+          "248744.0",
+          "52450.0",
+          "148207.0",
+          "122601.0",
+          "25606.0",
+          "152987.0",
+          "126143.0",
+          "26844.0"
+        ],
+        [
+          "",
+          "",
+          "Humanmedizin/Gesundheitswissenschaften",
+          "207035.0",
+          "184333.0",
+          "22702.0",
+          "63289.0",
+          "55050.0",
+          "8239.0",
+          "143746.0",
+          "129283.0",
+          "14463.0"
+        ],
+        [
+          "",
+          "",
+          "Agrar-, Forst- und Ern\u00e4hrungswissensch., Veterin\u00e4r",
+          "60365.0",
+          "51622.0",
+          "8743.0",
+          "23693.0",
+          "19984.0",
+          "3709.0",
+          "36672.0",
+          "31638.0",
+          "5034.0"
+        ],
+        [
+          "",
+          "",
+          "Ingenieurwissenschaften",
+          "748708.0",
+          "557333.0",
+          "191375.0",
+          "559321.0",
+          "422990.0",
+          "136331.0",
+          "189387.0",
+          "134343.0",
+          "55044.0"
+        ]
+      ]
+    },
+    "21321-01-01-4-B.xml": {
+      "file_type": "xml",
+      "top_tags": {
+        "VALUE": 15705,
+        "FEDERATION": 3051,
+        "TEXT": 1180,
+        "VARIABLE": 513,
+        "FEDERATION-OBJECT": 509,
+        "SHORT-DESCRIPTION": 509,
+        "VALUE-ASSOC": 503,
+        "VARIABLE-COUNT": 502,
+        "VALIDITY": 480,
+        "FROM": 476,
+        "VALIDITIES": 474,
+        "TO": 474
+      },
+      "axes_detected": [
+        "GESINS",
+        "HS-FG2",
+        "JAHR",
+        "KREISE"
+      ],
+      "variables_detected": [
+        "DINSG",
+        "DLAND",
+        "GESINS",
+        "HS-FG2",
+        "HS-W06",
+        "JAHR",
+        "KREISE",
+        "REGBEZ"
+      ],
+      "quality_markers_seen": {
+        "e": 3548,
+        "-": 10732,
+        ".": 420
+      },
+      "coordinate_samples": [
+        "([HS-FG2].[HS-FG01],[JAHR].[2023],[KREISE].[01001],[GESINS].[GESM])",
+        "([HS-FG2].[HS-FG01],[JAHR].[2023],[KREISE].[01001],[GESINS].[GESW])",
+        "([HS-FG2].[HS-FG01],[JAHR].[2023],[KREISE].[01001],[GESINS].[INSGESAMT])",
+        "([HS-FG2].[HS-FG01],[JAHR].[2023],[KREISE].[01002],[GESINS].[GESM])",
+        "([HS-FG2].[HS-FG01],[JAHR].[2023],[KREISE].[01002],[GESINS].[GESW])",
+        "([HS-FG2].[HS-FG01],[JAHR].[2023],[KREISE].[01002],[GESINS].[INSGESAMT])",
+        "([HS-FG2].[HS-FG01],[JAHR].[2023],[KREISE].[01003],[GESINS].[GESM])",
+        "([HS-FG2].[HS-FG01],[JAHR].[2023],[KREISE].[01003],[GESINS].[GESW])"
+      ]
+    },
+    "21321-01-01-4_flat.csv": {
+      "file_type": "csv",
+      "encoding": "iso-8859-1",
+      "delimiter": ";",
+      "header_row_index": 0,
+      "data_start_row_index": 1,
+      "metadata_lines_between_header_and_data": 0,
+      "columns": [
+        "statistics_code",
+        "statistics_label",
+        "time_code",
+        "time_label",
+        "time",
+        "1_variable_code",
+        "1_variable_label",
+        "1_variable_attribute_code",
+        "1_variable_attribute_label",
+        "2_variable_code",
+        "2_variable_label",
+        "2_variable_attribute_code",
+        "2_variable_attribute_label",
+        "3_variable_code",
+        "3_variable_label",
+        "3_variable_attribute_code",
+        "3_variable_attribute_label",
+        "value",
+        "value_unit",
+        "value_variable_code",
+        "value_variable_label"
+      ],
+      "inferred_types": {
+        "statistics_code": "integer",
+        "statistics_label": "string",
+        "time_code": "string",
+        "time_label": "string",
+        "time": "year",
+        "1_variable_code": "string",
+        "1_variable_label": "string",
+        "1_variable_attribute_code": "integer",
+        "1_variable_attribute_label": "string",
+        "2_variable_code": "string",
+        "2_variable_label": "string",
+        "2_variable_attribute_code": "string",
+        "2_variable_attribute_label": "string",
+        "3_variable_code": "string",
+        "3_variable_label": "string",
+        "3_variable_attribute_code": "string",
+        "3_variable_attribute_label": "string",
+        "value": "integer",
+        "value_unit": "string",
+        "value_variable_code": "string",
+        "value_variable_label": "string"
+      },
+      "quality_markers_seen": {
+        "-": 42,
+        ".": 1
+      }
+    }
+  },
+  "contracts": {
+    "21111-01-03-4-B.xlsx": {
+      "file": "21111-01-03-4-B.xlsx",
+      "file_type": "xlsx",
+      "required_dimension_candidates": [
+        "jahr"
+      ],
+      "required_rules": {
+        "must_include_geo_key": [
+          "AGS",
+          "KREISE"
+        ],
+        "must_include_time_key": [
+          "JAHR"
+        ],
+        "accepted_quality_markers": [
+          "-",
+          ".",
+          "x",
+          "X",
+          "e"
+        ]
+      },
+      "ingestion_hints": {
+        "normalize_ags_to_5_digits": true,
+        "normalize_abbreviations": [
+          "dar.",
+          "Mio",
+          "K"
+        ],
+        "drop_metadata_rows_before_header": true
+      }
+    },
+    "21111-01-03-4.xlsx": {
+      "file": "21111-01-03-4.xlsx",
+      "file_type": "xlsx",
+      "required_dimension_candidates": [
+        "jahr"
+      ],
+      "required_rules": {
+        "must_include_geo_key": [
+          "AGS",
+          "KREISE"
+        ],
+        "must_include_time_key": [
+          "JAHR"
+        ],
+        "accepted_quality_markers": [
+          "-",
+          ".",
+          "x",
+          "X",
+          "e"
+        ]
+      },
+      "ingestion_hints": {
+        "normalize_ags_to_5_digits": true,
+        "normalize_abbreviations": [
+          "dar.",
+          "Mio",
+          "K"
+        ],
+        "drop_metadata_rows_before_header": true
+      }
+    },
+    "21111-02-06-4-B.csv": {
+      "file": "21111-02-06-4-B.csv",
+      "file_type": "csv",
+      "required_dimension_candidates": [],
+      "required_rules": {
+        "must_include_geo_key": [
+          "AGS",
+          "KREISE"
+        ],
+        "must_include_time_key": [
+          "JAHR"
+        ],
+        "accepted_quality_markers": [
+          "-",
+          ".",
+          "x",
+          "X",
+          "e"
+        ]
+      },
+      "ingestion_hints": {
+        "normalize_ags_to_5_digits": true,
+        "normalize_abbreviations": [
+          "dar.",
+          "Mio",
+          "K"
+        ],
+        "drop_metadata_rows_before_header": true
+      }
+    },
+    "21111-02-06-4.csv": {
+      "file": "21111-02-06-4.csv",
+      "file_type": "csv",
+      "required_dimension_candidates": [],
+      "required_rules": {
+        "must_include_geo_key": [
+          "AGS",
+          "KREISE"
+        ],
+        "must_include_time_key": [
+          "JAHR"
+        ],
+        "accepted_quality_markers": [
+          "-",
+          ".",
+          "x",
+          "X",
+          "e"
+        ]
+      },
+      "ingestion_hints": {
+        "normalize_ags_to_5_digits": true,
+        "normalize_abbreviations": [
+          "dar.",
+          "Mio",
+          "K"
+        ],
+        "drop_metadata_rows_before_header": true
+      }
+    },
+    "21311-01-01-4-B.csv": {
+      "file": "21311-01-01-4-B.csv",
+      "file_type": "csv",
+      "required_dimension_candidates": [
+        "geschlecht"
+      ],
+      "required_rules": {
+        "must_include_geo_key": [
+          "AGS",
+          "KREISE"
+        ],
+        "must_include_time_key": [
+          "JAHR"
+        ],
+        "accepted_quality_markers": [
+          "-",
+          ".",
+          "x",
+          "X",
+          "e"
+        ]
+      },
+      "ingestion_hints": {
+        "normalize_ags_to_5_digits": true,
+        "normalize_abbreviations": [
+          "dar.",
+          "Mio",
+          "K"
+        ],
+        "drop_metadata_rows_before_header": true
+      }
+    },
+    "21311-01-01-4.xlsx": {
+      "file": "21311-01-01-4.xlsx",
+      "file_type": "xlsx",
+      "required_dimension_candidates": [],
+      "required_rules": {
+        "must_include_geo_key": [
+          "AGS",
+          "KREISE"
+        ],
+        "must_include_time_key": [
+          "JAHR"
+        ],
+        "accepted_quality_markers": [
+          "-",
+          ".",
+          "x",
+          "X",
+          "e"
+        ]
+      },
+      "ingestion_hints": {
+        "normalize_ags_to_5_digits": true,
+        "normalize_abbreviations": [
+          "dar.",
+          "Mio",
+          "K"
+        ],
+        "drop_metadata_rows_before_header": true
+      }
+    },
+    "21321-01-01-4-B.xml": {
+      "file": "21321-01-01-4-B.xml",
+      "file_type": "xml",
+      "required_dimension_candidates": [
+        "GESINS",
+        "HS-FG2",
+        "JAHR",
+        "KREISE"
+      ],
+      "required_rules": {
+        "must_include_geo_key": [
+          "AGS",
+          "KREISE"
+        ],
+        "must_include_time_key": [
+          "JAHR"
+        ],
+        "accepted_quality_markers": [
+          "-",
+          ".",
+          "x",
+          "X",
+          "e"
+        ]
+      },
+      "ingestion_hints": {
+        "normalize_ags_to_5_digits": true,
+        "normalize_abbreviations": [
+          "dar.",
+          "Mio",
+          "K"
+        ],
+        "drop_metadata_rows_before_header": true
+      }
+    },
+    "21321-01-01-4_flat.csv": {
+      "file": "21321-01-01-4_flat.csv",
+      "file_type": "csv",
+      "required_dimension_candidates": [],
+      "required_rules": {
+        "must_include_geo_key": [
+          "AGS",
+          "KREISE"
+        ],
+        "must_include_time_key": [
+          "JAHR"
+        ],
+        "accepted_quality_markers": [
+          "-",
+          ".",
+          "x",
+          "X",
+          "e"
+        ]
+      },
+      "ingestion_hints": {
+        "normalize_ags_to_5_digits": true,
+        "normalize_abbreviations": [
+          "dar.",
+          "Mio",
+          "K"
+        ],
+        "drop_metadata_rows_before_header": true
+      }
+    }
+  }
+}
