@@ -9,7 +9,7 @@ import pytest
 from src.ml.run_all import build_linear_forecast, build_naive_forecast, run_all
 
 
-def test_build_naive_forecast_single_point():
+def test_build_naive_forecast_single_point() -> None:
     series = pd.DataFrame({"year": [2023], "value": [100.0]})
     forecast = build_naive_forecast(series, periods=3)
 
@@ -17,7 +17,7 @@ def test_build_naive_forecast_single_point():
     assert list(forecast["yhat"]) == [100.0, 100.0, 100.0]
 
 
-def test_build_linear_forecast_two_points():
+def test_build_linear_forecast_two_points() -> None:
     series = pd.DataFrame({"year": [2022, 2023], "value": [100.0, 120.0]})
     forecast = build_linear_forecast(series, periods=2)
 
@@ -26,7 +26,7 @@ def test_build_linear_forecast_two_points():
     assert forecast.loc[1, "yhat"] == pytest.approx(160.0)
 
 
-def test_phase07_run_all_writes_artifacts(tmp_path: Path):
+def test_phase07_run_all_writes_artifacts(tmp_path: Path) -> None:
     db_path = tmp_path / "analytics.duckdb"
     con = duckdb.connect(str(db_path))
 

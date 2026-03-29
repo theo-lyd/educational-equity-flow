@@ -1,8 +1,10 @@
+from pathlib import Path
+
 from src.ingestion.run import run_smoke
 from src.tools.dbt_runner import run_dbt
 
 
-def test_ingestion_smoke_creates_output(tmp_path):
+def test_ingestion_smoke_creates_output(tmp_path: Path) -> None:
     source = tmp_path / "raw"
     source.mkdir()
     (source / "sample.csv").write_text("a,b\n1,2\n", encoding="utf-8")
@@ -14,7 +16,7 @@ def test_ingestion_smoke_creates_output(tmp_path):
     assert target.exists()
 
 
-def test_dbt_runner_skips_missing_project(tmp_path):
+def test_dbt_runner_skips_missing_project(tmp_path: Path) -> None:
     missing = tmp_path / "missing_dbt"
     code = run_dbt(command="run", dbt_dir=str(missing))
     assert code == 0

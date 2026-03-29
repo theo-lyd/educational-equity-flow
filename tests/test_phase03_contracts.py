@@ -1,11 +1,12 @@
 import json
+from pathlib import Path
 
 from openpyxl import Workbook
 
 from src.profiling.profile_raw_sources import run
 
 
-def test_phase03_profile_outputs_contracts(tmp_path):
+def test_phase03_profile_outputs_contracts(tmp_path: Path) -> None:
     raw_dir = tmp_path / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
     out_dir = tmp_path / "artifacts"

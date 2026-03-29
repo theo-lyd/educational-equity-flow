@@ -4,7 +4,7 @@ from pathlib import Path
 from src.ingestion.run import run_ingestion
 
 
-def test_phase04_ingestion_manifest_idempotent(tmp_path):
+def test_phase04_ingestion_manifest_idempotent(tmp_path: Path) -> None:
     source = tmp_path / "raw"
     source.mkdir(parents=True)
 
@@ -30,7 +30,7 @@ def test_phase04_ingestion_manifest_idempotent(tmp_path):
     assert "sample-B.csv" in manifest["files"]
 
 
-def test_phase04_ingestion_writes_partitioned_parquet(tmp_path):
+def test_phase04_ingestion_writes_partitioned_parquet(tmp_path: Path) -> None:
     source = tmp_path / "raw"
     source.mkdir(parents=True)
     (source / "sample-B.csv").write_text(
@@ -49,7 +49,7 @@ def test_phase04_ingestion_writes_partitioned_parquet(tmp_path):
     assert payload_path.exists()
 
 
-def test_phase04_reprocess_removes_stale_partitions(tmp_path):
+def test_phase04_reprocess_removes_stale_partitions(tmp_path: Path) -> None:
     source = tmp_path / "raw"
     source.mkdir(parents=True)
     sample = source / "sample-B.csv"

@@ -14,7 +14,7 @@ from src.dashboard.phase10 import (
 )
 
 
-def test_ags_to_lat_lon_is_deterministic_and_in_bounds():
+def test_ags_to_lat_lon_is_deterministic_and_in_bounds() -> None:
     lat_1, lon_1 = ags_to_lat_lon("01001")
     lat_2, lon_2 = ags_to_lat_lon("01001")
 
@@ -23,7 +23,7 @@ def test_ags_to_lat_lon_is_deterministic_and_in_bounds():
     assert 5.9 <= lon_1 <= 15.1
 
 
-def test_build_sankey_series_shape():
+def test_build_sankey_series_shape() -> None:
     frame = pd.DataFrame(
         {
             "stage_1_students": [100.0, 120.0],
@@ -41,7 +41,7 @@ def test_build_sankey_series_shape():
     assert float(sankey["value"].iloc[0]) == 200.0
 
 
-def test_load_scd_timeline_current_and_historical(tmp_path: Path):
+def test_load_scd_timeline_current_and_historical(tmp_path: Path) -> None:
     db_path = tmp_path / "analytics.duckdb"
     con = duckdb.connect(str(db_path))
 
@@ -80,7 +80,7 @@ def test_load_scd_timeline_current_and_historical(tmp_path: Path):
     assert set(history_df["record_type"]) == {"historical"}
 
 
-def test_load_geojson_centroids(tmp_path: Path):
+def test_load_geojson_centroids(tmp_path: Path) -> None:
         geojson_path = tmp_path / "districts.geojson"
         geojson_path.write_text(
                 """
@@ -117,7 +117,7 @@ def test_load_geojson_centroids(tmp_path: Path):
         assert centroids.iloc[0]["ags"] == "01001"
 
 
-def test_load_anomaly_map_data_uses_geojson_and_fallback(tmp_path: Path):
+def test_load_anomaly_map_data_uses_geojson_and_fallback(tmp_path: Path) -> None:
         db_path = tmp_path / "analytics.duckdb"
         con = duckdb.connect(str(db_path))
 

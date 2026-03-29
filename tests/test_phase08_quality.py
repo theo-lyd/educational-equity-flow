@@ -55,7 +55,7 @@ def _seed_quality_tables(db_path: Path) -> None:
     con.close()
 
 
-def test_phase08_quality_checks_report(tmp_path: Path):
+def test_phase08_quality_checks_report(tmp_path: Path) -> None:
     db_path = tmp_path / "analytics.duckdb"
     artifact_path = tmp_path / "quality_report.json"
     _seed_quality_tables(db_path)
