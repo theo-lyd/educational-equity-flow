@@ -125,6 +125,11 @@ These are intentionally conservative defaults and should be tuned with domain ow
 | GE ecosystem emits third-party deprecation warnings during pytest | Dependency stack (`pyparsing`, `marshmallow`) warnings from installed package versions | Warning noise may obscure project-specific warnings | Kept warnings non-fatal and validated checker outputs + status logic | Revisit dependency pinning/upgrade path in maintenance cycle; keep warning budget monitoring |
 | Freshness semantics differ across stage sources | Stage datasets have different update cadences and historical depth | False-positive SLA failures if thresholds are too strict | Implemented configurable warn/fail thresholds and report-level visibility | Tune thresholds periodically with source owners and observed refresh cadence |
 
+### Warning Policy Decision (Current)
+- Great Expectations dependency deprecation warnings are treated as non-blocking warnings for now.
+- CI should not fail on these warnings unless they become functional failures.
+- They remain visible in logs and are tracked as dependency maintenance work.
+
 ## Residual Risks
 - Current SLA thresholds are static and may need periodic recalibration.
 - CI workflow assumes raw/bronze prerequisites are available in runner context.
@@ -135,7 +140,3 @@ These are intentionally conservative defaults and should be tuned with domain ow
 - Fail/warn observability is available via structured JSON artifacts.
 - Pipeline is ready for orchestration hardening and broader CI/CD rollout.
 
-## Issues Encountered
-| Problem | Root Cause | Potential Implication(s) | Resolution | Prevention Action |
-|---|---|---|---|---|
-| None yet | - | - | - | - |

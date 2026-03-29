@@ -85,6 +85,51 @@
 | dbt read failed on CI seed parquet (`dimension_2` type mismatch) | Polars wrote incompatible inferred schemas across dataset parquet files | CI false failures and blocked PR merges | Enforced explicit Bronze schema casting (`BRONZE_SCHEMA`) before parquet write | Keep synthetic fixture writers schema-locked and add local dbt run in change validation |
 | Quality gate failed in CI seed mode (`minimum_transition_rows`) | Synthetic fixture volume (10 AGS rows) was below governance threshold (`min_cluster_rows=100`) | Master pipeline would fail despite healthy orchestration logic | Expanded fixture generator to 120 AGS rows | Align synthetic data size with operational thresholds; validate with `make quality-check` before merge |
 
+## Post-Implementation CI Incident Log (2026-03-29)
+
+### Incident A: full-pipeline failed after push (`ff2eb5a`)
+
+- Run: `pipeline-master` (`23710912625`)
+- Symptom: `Process completed with exit code 2` in `Run tests`.
+- Actual failing check: `tests/test_phase03_contracts.py::test_phase03_profile_outputs_contracts` with `assert 0 >= 8`.
+- Root cause: test depended on repository `data/raw` files that are intentionally untracked and absent in GitHub runner context.
+- Fix implemented:
+	- refactored `tests/test_phase03_contracts.py` to generate synthetic CSV/XLSX/XML fixtures in `tmp_path`.
+	- preserved contract assertions while removing external data dependency.
+- Additional hardening in same cycle:
+	- upgraded action versions to modern majors (`actions/checkout@v6`, `actions/setup-python@v6`).
+- Validation:
+	- local: `make test`, `make ci-seed-bronze`, `make dbt-run`, `make dbt-test`, `make quality-check` all pass.
+
+### Incident B: full-pipeline failed after warning-removal push (`dd102a7`)
+
+- Run: `pipeline-master` (`23711073198`)
+- Symptom: `dbt-test` crashed with fatal Python multiprocessing/GIL error (`PyEval_SaveThread ... GIL is released`).
+- Root cause: runner-specific multiprocessing instability under dbt/duckdb threaded execution.
+- Fix implemented:
+	- made dbt thread count configurable in `dbt/profiles.yml` via `DBT_THREADS` env var.
+	- set `DBT_THREADS=1` in CI workflows that execute dbt (`pipeline-master`, `quality-gates`, `freshness-alert`).
+- Validation:
+	- local with `DBT_THREADS=1`: `make dbt-run` and `make dbt-test` pass.
+
+### Final Verification Outcome
+
+- Successful run: `pipeline-master` (`23711135572`) on commit `3a68507`.
+- Status: completed successfully.
+- Node action warning status: no remaining Node 20 platform warnings found in run logs.
+- Remaining warning class: library-level Python deprecation warnings from Great Expectations dependency chain during pytest.
+
+### Operational Decision on Remaining GE Deprecation Warnings
+
+- Decision: do not fail CI for these warnings currently.
+- Rationale:
+	- they are third-party dependency deprecation notices, not project logic failures,
+	- core gates (dbt, quality checks, tests) are passing deterministically.
+- Control:
+	- keep warnings visible in logs,
+	- track dependency upgrade/pinning work as maintenance debt,
+	- revisit if warnings escalate to runtime errors in upcoming dependency releases.
+
 ## Risks and Follow-ups
 
 - Risk: CI fixture drift versus production raw patterns could mask edge-case parsing issues.
