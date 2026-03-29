@@ -35,7 +35,7 @@
 	- freshness-focused quality execution,
 	- quality report artifact upload.
 - Added `src/tools/ci_seed_bronze.py` and `make ci-seed-bronze` to produce deterministic Bronze parquet fixtures in CI.
-- Retired overlapping legacy workflow `.github/workflows/quality-gates.yml` to prevent duplicate CI runs on the same events.
+- Kept `.github/workflows/quality-gates.yml` as a manual (`workflow_dispatch`) compatibility workflow while moving PR/push automation to dedicated Phase 09 workflows.
 
 ## Concrete Tasks
 - Add workflows for linting, tests, dbt run/test, and quality checks.
