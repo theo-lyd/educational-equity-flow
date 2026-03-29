@@ -35,6 +35,7 @@ Notes:
 - `make dbt-test` runs dbt model tests.
 - `make dbt-snapshot` captures SCD Type 2 district-boundary history snapshots.
 - `make ml-run` executes Phase 07 clustering and forecasting artifact generation.
+- `make quality-check` executes Phase 08 quality/governance checks and writes `warehouse/artifacts/phase08_quality_report.json`.
 
 ## Project Execution Guide
 
