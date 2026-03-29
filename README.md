@@ -31,11 +31,18 @@ Notes:
 - `make ingest` runs the Phase 04 Bronze ingestion and writes `warehouse/artifacts/ingest_bronze.json`.
 - Bronze output is written as partitioned parquet under `data/bronze/dataset=<dataset>/year=<year>/`.
 - Incremental/idempotent behavior is tracked in `data/bronze/ingestion_manifest.json`.
+- `make ci-seed-bronze` writes synthetic Bronze fixtures for CI so workflows can run without tracked raw source files.
 - `make dbt-run` builds Silver dbt models.
 - `make dbt-test` runs dbt model tests.
 - `make dbt-snapshot` captures SCD Type 2 district-boundary history snapshots.
 - `make ml-run` executes Phase 07 clustering and forecasting artifact generation.
 - `make quality-check` executes Phase 08 quality/governance checks and writes `warehouse/artifacts/phase08_quality_report.json`.
+
+## CI Workflows (Phase 09)
+
+- `.github/workflows/ci-pr.yml`: pull-request slim checks (lint, pytest, dbt parse/compile).
+- `.github/workflows/pipeline-master.yml`: full push-to-master pipeline (CI seed, dbt run/test, quality checks, pytest, artifacts).
+- `.github/workflows/freshness-alert.yml`: weekly scheduled freshness monitoring with report artifact upload.
 
 ## Project Execution Guide
 

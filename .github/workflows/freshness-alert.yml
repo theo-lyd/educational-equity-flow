@@ -1,0 +1,44 @@
+name: freshness-alert
+
+on:
+  schedule:
+    - cron: "15 5 * * 1"
+  workflow_dispatch:
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Seed CI bronze fixtures
+        run: make ci-seed-bronze
+
+      - name: Build dbt models
+        run: make dbt-run
+
+      - name: Freshness-focused quality check
+        run: |
+          .venv/bin/python -m src.quality.run_checks \
+            --freshness-warn-years 2 \
+            --freshness-fail-years 4 \
+            --min-cluster-rows 1
+
+      - name: Upload freshness report
+        uses: actions/upload-artifact@v4
+        with:
+          name: freshness-report
+          path: warehouse/artifacts/phase08_quality_report.json
+          retention-days: 30

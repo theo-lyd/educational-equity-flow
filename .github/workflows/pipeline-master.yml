@@ -1,0 +1,47 @@
+name: pipeline-master
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  full-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Seed CI bronze fixtures
+        run: make ci-seed-bronze
+
+      - name: Run dbt build checks
+        run: |
+          make dbt-run
+          make dbt-test
+
+      - name: Run quality gates
+        run: make quality-check
+
+      - name: Run tests
+        run: make test
+
+      - name: Upload quality and dbt artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-master-artifacts
+          path: |
+            warehouse/artifacts/phase08_quality_report.json
+            dbt/target/run_results.json
+            dbt/target/manifest.json
+          retention-days: 14
