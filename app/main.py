@@ -7,6 +7,11 @@ import pandas as pd
 import streamlit as st
 
 from src.dashboard.cache_utils import clear_dashboard_cache
+from src.dashboard.causal_inference import (
+    format_confidence_interval,
+    run_causal_analysis_pipeline,
+    simulate_counterfactual_scenario,
+)
 from src.dashboard.drilldown import (
     build_leakage_timeseries_chart,
     build_pipeline_chart,
@@ -598,6 +603,173 @@ def render_subject_heterogeneity() -> None:
             st.altair_chart(chart, use_container_width=True)
 
 
+def render_causal_analysis() -> None:
+    """Render causal inference analysis view with treatment effects."""
+    st.subheader("Causal Inference: District Intervention Effects")
+    st.caption(
+        "⚠️ OBSERVATIONAL ANALYSIS: These estimates are from observational data. "
+        "Causal interpretations require strong assumptions (no unmeasured "
+        "confounding, positivity). Results show association, not definitive "
+        "causation."
+    )
+
+    # Run causal analysis pipeline
+    with st.spinner("Estimating propensity scores and treatment effects..."):
+        causal_results = run_causal_analysis_pipeline(caliper=0.1)
+
+    if not causal_results.get("success", False):
+        st.error(f"Causal analysis failed: {causal_results.get('message', 'Unknown error')}")
+        return
+
+    # Display ATE results
+    st.markdown("### Average Treatment Effect (ATE)")
+    ate = causal_results["ate"]
+    se = causal_results["standard_error"]
+    ci = (causal_results["ci_lower"], causal_results["ci_upper"])
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("ATE (Effect Size)", f"{ate:.4f}")
+    col2.metric("95% CI", format_confidence_interval(ci[0], ci[1]))
+    col3.metric("Standard Error", f"{se:.4f}")
+    col4.metric("P-Value Significant", "Yes" if ci[0] > 0 or ci[1] < 0 else "No")
+
+    # Interpretation
+    st.markdown("#### Interpretation")
+    if ci[0] > 0:
+        st.success(
+            f"✅ Significant positive effect: Treatment increases outcomes by {ate:.2%} "
+            f"(95% CI: {ci[0]:.2%} to {ci[1]:.2%})"
+        )
+    elif ci[1] < 0:
+        st.error(
+            f"❌ Significant negative effect: Treatment decreases outcomes by {-ate:.2%} "
+            f"(95% CI: {ci[0]:.2%} to {ci[1]:.2%})"
+        )
+    else:
+        st.warning(
+            f"⚠️ No significant effect detected at α=0.05. "
+            f"Point estimate: {ate:.4f}, CI crosses zero: "
+            f"{format_confidence_interval(ci[0], ci[1])}"
+        )
+
+    # Matching quality
+    st.markdown("### Matching Quality & Covariate Balance")
+    col1, col2, col3 = st.columns(3)
+    metrics = causal_results["matching_metrics"]
+    col1.metric("Districts (Total)", causal_results["n_total"])
+    col2.metric("Treated / Control", 
+                f"{causal_results['n_treated']} / {causal_results['n_untreated']}")
+    col3.metric("Match Rate", 
+                f"{metrics['match_rate']:.1%} ({metrics['n_matched']} pairs)")
+
+    # Propensity score balance
+    st.markdown("#### Propensity Score Balance (Before/After Matching)")
+    balance_before = causal_results["balance_before"]
+    balance_after = causal_results["balance_after"]
+
+    balance_df = pd.DataFrame(
+        {
+            "Metric": ["Treated PS Mean", "Control PS Mean", "Difference"],
+            "Before Matching": [
+                f"{balance_before['ps_mean_treated']:.4f}",
+                f"{balance_before['ps_mean_untreated']:.4f}",
+                f"{balance_before['ps_mean_treated'] - balance_before['ps_mean_untreated']:.4f}",
+            ],
+            "After Matching": [
+                f"{balance_after['ps_mean_treated']:.4f}",
+                f"{balance_after['ps_mean_untreated']:.4f}",
+                f"{balance_after['ps_mean_treated'] - balance_after['ps_mean_untreated']:.4f}",
+            ],
+        }
+    )
+    st.dataframe(balance_df, use_container_width=True, hide_index=True)
+
+    st.caption(
+        "✅ Good balance: Treated and control groups have similar propensity "
+        "scores after matching. This suggests confounding is reduced."
+    )
+
+    # Counterfactual scenarios
+    st.markdown("### Counterfactual Policy Scenarios")
+    st.caption(
+        "Simulate hypothetical intervention effects by adjusting district outcomes "
+        "under different policy assumptions."
+    )
+
+    base_data = causal_results["ps_data"].merge(
+        causal_results["matched_data"][["ags", "outcome"]],
+        on="ags",
+        how="inner",
+    )
+
+    scenario_col1, scenario_col2 = st.columns(2)
+    with scenario_col1:
+        selected_scenario = st.selectbox(
+            "Select policy scenario",
+            options=["tutoring_boost", "delayed_entry", "remediation"],
+            format_func=lambda x: {
+                "tutoring_boost": "📚 10% Tutoring Resource Boost",
+                "delayed_entry": "⏰ Delayed University Entry",
+                "remediation": "🎯 Subject-Specific Remediation",
+            }.get(x, x),
+        )
+
+    with scenario_col2:
+        effect_size = st.slider(
+            "Effect size parameter",
+            min_value=0.0,
+            max_value=0.3,
+            value=0.1,
+            step=0.02,
+        )
+
+    # Run scenario
+    scenario_results = simulate_counterfactual_scenario(
+        base_data,
+        selected_scenario,
+        effect_size,
+    )
+
+    if scenario_results:
+        st.markdown(f"#### {scenario_results['description']}")
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Baseline Mean Outcome", f"{scenario_results['baseline_mean']:.2%}")
+        col2.metric("Counterfactual Outcome", f"{scenario_results['counterfactual_mean']:.2%}")
+        col3.metric("Aggregate Effect", f"{scenario_results['aggregate_effect']:+.4f}")
+
+        # Visualization of scenario effects
+        scenario_cols = ["ags", "outcome", "counterfactual_outcome"]
+        scenario_data = scenario_results["data"][scenario_cols].copy()
+        scenario_data["effect"] = (
+            scenario_data["counterfactual_outcome"] - scenario_data["outcome"]
+        )
+
+        chart = (
+            alt.Chart(scenario_data)
+            .mark_bar()
+            .encode(
+                x=alt.X("effect:Q", title="Individual Effect (Outcome Change)"),
+                y=alt.Y(
+                    "count():Q",
+                    title="Number of Districts",
+                ),
+                color=alt.Color(
+                    "effect:Q",
+                    scale=alt.Scale(scheme="redblue"),
+                    legend=None,
+                ),
+            )
+            .properties(height=300)
+        )
+        st.altair_chart(chart, use_container_width=True)
+
+        st.caption(
+            "📊 Distribution of individual effects: Districts benefit differently based on "
+            "baseline characteristics. Red = negative effects, Blue = positive effects."
+        )
+
+
 def render_cluster_analysis() -> None:
     st.subheader("Cluster Segmentation Analysis")
 
@@ -654,6 +826,7 @@ with st.sidebar:
             "Regional Comparison",
             "Cluster Analysis",
             "Subject Heterogeneity",
+            "Causal Inference",
         ],
         help="Drill-down views provide detailed district and regional exploration.",
     )
@@ -684,3 +857,5 @@ elif view_mode == "Cluster Analysis":
     render_cluster_analysis()
 elif view_mode == "Subject Heterogeneity":
     render_subject_heterogeneity()
+elif view_mode == "Causal Inference":
+    render_causal_analysis()
