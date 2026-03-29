@@ -56,7 +56,11 @@ def test_load_scd_timeline_current_and_historical(tmp_path: Path):
         select * from (values
             ('01001', 'Region A', 2024, now(), 'id1', now(), now(), null),
             ('01002', 'Region B', 2024, now(), 'id2', now(), now(), null)
-        ) t(ags, region, latest_year, extracted_at, dbt_scd_id, dbt_updated_at, dbt_valid_from, dbt_valid_to)
+        )
+        t(
+            ags, region, latest_year, extracted_at, dbt_scd_id,
+            dbt_updated_at, dbt_valid_from, dbt_valid_to
+        )
         """
     )
     con.close()

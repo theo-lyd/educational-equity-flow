@@ -8,7 +8,6 @@ from pathlib import Path
 
 import polars as pl
 
-
 BRONZE_COLUMNS = [
     "dataset",
     "source_file",
@@ -103,7 +102,11 @@ def seed_bronze(target: Path) -> None:
                 "year": "2024",
                 "ags": ags,
                 "region": region,
-                "metric_name": "Absolvierende/Abgehende allgemeinbildender Schulen nach dem Abschluss | mit Allgemeiner und fachgebundener Hochschulreife | Insgesamt",
+                "metric_name": (
+                    "Absolvierende/Abgehende allgemeinbildender Schulen nach dem "
+                    "Abschluss | mit Allgemeiner und fachgebundener Hochschulreife "
+                    "| Insgesamt"
+                ),
                 "raw_value": str(500 + idx * 50),
                 "value": float(500 + idx * 50),
                 "quality": "ok",

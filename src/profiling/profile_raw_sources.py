@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import re
 from collections import Counter
@@ -29,7 +28,7 @@ def guess_encoding(path: Path) -> str:
 def read_text_lines(path: Path, encoding: str, max_lines: int = 200) -> list[str]:
     lines: list[str] = []
     with path.open("r", encoding=encoding, errors="replace") as fh:
-        for _, line in zip(range(max_lines), fh):
+        for _, line in zip(range(max_lines), fh, strict=False):
             lines.append(line.rstrip("\n"))
     return lines
 
@@ -173,7 +172,7 @@ def profile_xml(path: Path) -> dict[str, Any]:
     quality_markers: Counter[str] = Counter()
     coordinate_samples: list[str] = []
 
-    for event, elem in ET.iterparse(path, events=("start",)):
+    for _event, elem in ET.iterparse(path, events=("start",)):
         tag = elem.tag.split("}")[-1]
         tag_counter[tag] += 1
 

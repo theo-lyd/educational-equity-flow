@@ -127,11 +127,14 @@ def _cluster_labels(cluster_summary: pd.DataFrame) -> dict[int, str]:
 
     mapping: dict[int, str] = {}
     for idx, row in ranked.iterrows():
-        mapping[int(row["cluster_id"])] = narratives[idx] if idx < len(narratives) else f"Segment {idx + 1}"
+        label = narratives[idx] if idx < len(narratives) else f"Segment {idx + 1}"
+        mapping[int(row["cluster_id"])] = label
     return mapping
 
 
-def run_clustering(features: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, int | float]]:
+def run_clustering(
+    features: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, int | float]]:
     feature_cols = [
         "transition_rate_1_to_2",
         "transition_rate_2_to_3",
@@ -159,9 +162,15 @@ def run_clustering(features: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, 
                 {
                     "cluster_id": 0,
                     "district_count": int(len(features)),
-                    "mean_end_to_end_completion_rate": float(features["end_to_end_completion_rate"].fillna(0).mean()),
-                    "mean_transition_rate_4_to_5": float(features["transition_rate_4_to_5"].fillna(0).mean()),
-                    "mean_leakage_differential": float(features["avg_leakage_differential"].fillna(0).mean()),
+                    "mean_end_to_end_completion_rate": float(
+                        features["end_to_end_completion_rate"].fillna(0).mean()
+                    ),
+                    "mean_transition_rate_4_to_5": float(
+                        features["transition_rate_4_to_5"].fillna(0).mean()
+                    ),
+                    "mean_leakage_differential": float(
+                        features["avg_leakage_differential"].fillna(0).mean()
+                    ),
                     "cluster_label": "Data Sparse Segment",
                 }
             ]
@@ -279,11 +288,17 @@ def run_forecast(series: pd.DataFrame, periods: int = 5) -> tuple[pd.DataFrame, 
             train = series.rename(columns={"year": "ds", "value": "y"}).copy()
             train["ds"] = pd.to_datetime(train["ds"].astype(str) + "-12-31")
 
-            model = Prophet(yearly_seasonality=False, weekly_seasonality=False, daily_seasonality=False)
+            model = Prophet(
+                yearly_seasonality=False,
+                weekly_seasonality=False,
+                daily_seasonality=False,
+            )
             model.fit(train)
 
             future = model.make_future_dataframe(periods=periods, freq="Y")
-            fc = model.predict(future).tail(periods)[["ds", "yhat", "yhat_lower", "yhat_upper"]].copy()
+            fc = model.predict(future).tail(periods)[
+                ["ds", "yhat", "yhat_lower", "yhat_upper"]
+            ].copy()
             fc["year"] = fc["ds"].dt.year
             out = fc[["year", "yhat", "yhat_lower", "yhat_upper"]]
 
@@ -343,7 +358,9 @@ def run_all(db_path: Path = DB_PATH, artifact_dir: Path = ARTIFACT_DIR) -> dict[
     cluster_summary_path = artifact_dir / "phase07_cluster_summary.csv"
     forecast_path = artifact_dir / "phase07_forecast.csv"
 
-    cluster_assignments.sort_values(["cluster_id", "ags"]).to_csv(cluster_assignments_path, index=False)
+    cluster_assignments.sort_values(["cluster_id", "ags"]).to_csv(
+        cluster_assignments_path, index=False
+    )
     cluster_summary.sort_values("cluster_id").to_csv(cluster_summary_path, index=False)
     forecast.sort_values("year").to_csv(forecast_path, index=False)
 

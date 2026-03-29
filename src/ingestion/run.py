@@ -15,7 +15,6 @@ from .manifest import load_manifest, save_manifest, should_process, update_manif
 from .xlsx_ingestor import ingest_xlsx
 from .xml_ingestor import ingest_xml
 
-
 BRONZE_COLUMNS = [
     "dataset",
     "source_file",
@@ -49,7 +48,9 @@ def _discover_sources(source_path: Path) -> list[Path]:
     if not source_path.exists():
         return []
     supported = {".csv", ".xml", ".xlsx"}
-    return sorted([p for p in source_path.rglob("*") if p.is_file() and p.suffix.lower() in supported])
+    return sorted(
+        [p for p in source_path.rglob("*") if p.is_file() and p.suffix.lower() in supported]
+    )
 
 
 def _ingest_file(path: Path) -> pl.DataFrame:
@@ -117,7 +118,9 @@ def run_ingestion(
     target_path.mkdir(parents=True, exist_ok=True)
 
     sources = _discover_sources(source_path)
-    manifest_file = Path(manifest_path) if manifest_path else target_path / "ingestion_manifest.json"
+    manifest_file = (
+        Path(manifest_path) if manifest_path else target_path / "ingestion_manifest.json"
+    )
     manifest = load_manifest(manifest_file)
 
     processed_files: list[str] = []

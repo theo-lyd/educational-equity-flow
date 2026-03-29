@@ -19,7 +19,7 @@ def _parse_coordinate(coord: str) -> dict[str, str]:
 def ingest_xml(path: Path) -> pl.DataFrame:
     records: list[dict[str, object]] = []
 
-    for event, elem in ET.iterparse(path, events=("start",)):
+    for _event, elem in ET.iterparse(path, events=("start",)):
         tag = elem.tag.split("}")[-1]
         if tag != "VALUE":
             continue

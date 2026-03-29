@@ -63,7 +63,11 @@ def test_phase08_quality_checks_report(tmp_path: Path):
     report = run_quality_checks(
         db_path=db_path,
         artifact_path=artifact_path,
-        thresholds=QualityThresholds(freshness_warn_years=3, freshness_fail_years=8, min_cluster_rows=1),
+        thresholds=QualityThresholds(
+            freshness_warn_years=3,
+            freshness_fail_years=8,
+            min_cluster_rows=1,
+        ),
         as_of_year=2026,
     )
 

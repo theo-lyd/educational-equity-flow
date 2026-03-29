@@ -10,10 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import duckdb
-import pandas as pd
-
 import great_expectations as ge
-
 
 DEFAULT_DB_PATH = Path("warehouse") / "analytics.duckdb"
 DEFAULT_ARTIFACT_PATH = Path("warehouse") / "artifacts" / "phase08_quality_report.json"
@@ -167,7 +164,9 @@ def _run_freshness_checks(
     }
 
 
-def _run_operational_checks(con: duckdb.DuckDBPyConnection, thresholds: QualityThresholds) -> dict[str, Any]:
+def _run_operational_checks(
+    con: duckdb.DuckDBPyConnection, thresholds: QualityThresholds
+) -> dict[str, Any]:
     cluster_rows = con.execute("select count(*) from gold_transition_rates").fetchone()[0]
     checks = [
         {
@@ -240,7 +239,11 @@ def run_quality_checks(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run Phase 08 quality and governance checks.")
-    parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH), help="Path to DuckDB analytics database")
+    parser.add_argument(
+        "--db-path",
+        default=str(DEFAULT_DB_PATH),
+        help="Path to DuckDB analytics database",
+    )
     parser.add_argument(
         "--artifact-path",
         default=str(DEFAULT_ARTIFACT_PATH),
