@@ -9,6 +9,7 @@ from pathlib import Path
 
 import duckdb
 import pandas as pd
+import streamlit as st
 
 DEFAULT_DB_PATH = Path("warehouse") / "analytics.duckdb"
 DEFAULT_ARTIFACT_DIR = Path("warehouse") / "artifacts"
@@ -86,6 +87,7 @@ def _centroid_from_geometry(geometry: dict[str, object]) -> tuple[float, float] 
     return (round(lat, 5), round(lon, 5))
 
 
+@st.cache_data(ttl=3600)
 def load_geojson_centroids(geojson_path: Path = DEFAULT_GEOJSON_PATH) -> pd.DataFrame:
     if not geojson_path.exists():
         return pd.DataFrame(columns=["ags", "lat", "lon"])
@@ -115,6 +117,7 @@ def load_geojson_centroids(geojson_path: Path = DEFAULT_GEOJSON_PATH) -> pd.Data
     return df[["ags", "lat", "lon"]]
 
 
+@st.cache_data(ttl=3600)
 def load_stage_funnel(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
     return _fetch_df(
         """
@@ -170,6 +173,7 @@ def build_sankey_series(stage_funnel: pd.DataFrame) -> pd.DataFrame:
     )
 
 
+@st.cache_data(ttl=3600)
 def load_anomaly_map_data(
     db_path: Path = DEFAULT_DB_PATH,
     geojson_path: Path = DEFAULT_GEOJSON_PATH,
@@ -228,6 +232,7 @@ def load_anomaly_map_data(
     return df
 
 
+@st.cache_data(ttl=3600)
 def load_subject_resilience(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
     return _fetch_df(
         """
@@ -245,6 +250,7 @@ def load_subject_resilience(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
     )
 
 
+@st.cache_data(ttl=3600)
 def load_scd_timeline(mode: str, db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
     if mode == "current":
         query = (
@@ -278,6 +284,7 @@ def load_scd_timeline(mode: str, db_path: Path = DEFAULT_DB_PATH) -> pd.DataFram
     return _fetch_df(query, db_path=db_path)
 
 
+@st.cache_data(ttl=3600)
 def load_evidence_metadata(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> dict[str, object]:
     report_path = artifact_dir / "phase07_report.json"
     quality_path = artifact_dir / "phase08_quality_report.json"

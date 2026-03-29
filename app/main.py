@@ -6,6 +6,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from src.dashboard.cache_utils import clear_dashboard_cache
 from src.dashboard.drilldown import (
     build_leakage_timeseries_chart,
     build_pipeline_chart,
@@ -528,6 +529,13 @@ with st.sidebar:
         ],
         help="Drill-down views provide detailed district and regional exploration.",
     )
+
+    st.divider()
+    st.markdown("### Cache Management")
+    st.caption("All data is cached for 1 hour. Clear cache to force immediate refresh.")
+    if st.button("🔄 Refresh All Data"):
+        clear_dashboard_cache()
+        st.rerun()
 
 
 render_kpis(funnel_df)

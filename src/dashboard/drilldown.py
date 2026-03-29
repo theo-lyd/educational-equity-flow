@@ -8,6 +8,7 @@ from pathlib import Path
 import altair as alt
 import duckdb
 import pandas as pd
+import streamlit as st
 
 DEFAULT_DB_PATH = Path("warehouse") / "analytics.duckdb"
 
@@ -27,6 +28,7 @@ def _fetch_df(
         return con.execute(query, params).fetchdf()
 
 
+@st.cache_data(ttl=3600)
 def get_district_list(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
     """Load list of all districts with basic metrics."""
     return _fetch_df(
@@ -43,6 +45,7 @@ def get_district_list(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
     )
 
 
+@st.cache_data(ttl=3600)
 def get_district_pipeline(ags: str, db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
     """Get detailed stage-to-stage pipeline for a single district."""
     return _fetch_df(
@@ -86,6 +89,7 @@ def get_district_pipeline(ags: str, db_path: Path = DEFAULT_DB_PATH) -> pd.DataF
     )
 
 
+@st.cache_data(ttl=3600)
 def get_district_leakage_timeseries(
     ags: str,
     db_path: Path = DEFAULT_DB_PATH,
@@ -110,6 +114,7 @@ def get_district_leakage_timeseries(
     )
 
 
+@st.cache_data(ttl=3600)
 def get_district_subject_breakdown(
     ags: str,
     db_path: Path = DEFAULT_DB_PATH,
@@ -136,6 +141,7 @@ def get_district_subject_breakdown(
     )
 
 
+@st.cache_data(ttl=3600)
 def get_district_cluster_peer_group(
     ags: str,
     artifact_dir: Path = Path("warehouse") / "artifacts",
@@ -159,6 +165,7 @@ def get_district_cluster_peer_group(
     return cluster_id, peer_group
 
 
+@st.cache_data(ttl=3600)
 def get_region_comparison(
     region: str,
     db_path: Path = DEFAULT_DB_PATH,
@@ -184,6 +191,7 @@ def get_region_comparison(
     )
 
 
+@st.cache_data(ttl=3600)
 def get_cluster_summary(
     artifact_dir: Path = Path("warehouse") / "artifacts",
 ) -> pd.DataFrame:
