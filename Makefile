@@ -51,4 +51,4 @@ ci-seed-bronze:
 	$(PYTHON) -m src.tools.ci_seed_bronze --target data/bronze
 
 app:
-	streamlit run app/main.py
+	$(PYTHON) -m streamlit run app/main.py

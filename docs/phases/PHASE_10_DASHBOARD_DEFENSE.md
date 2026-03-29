@@ -63,6 +63,7 @@ Status: Completed (2026-03-29)
 - `DBT_THREADS=1 make dbt-run` -> PASS
 - `DBT_THREADS=1 make dbt-test` -> PASS
 - `make app` entrypoint available for dashboard launch and reviewer walkthrough.
+- Final release pass completed across major targets; see `docs/phase_10/FINAL_RELEASE_READINESS_REPORT.md`.
 
 ### Artifact and Evidence References
 
@@ -75,6 +76,9 @@ Status: Completed (2026-03-29)
 | Problem | Root Cause | Potential Implication(s) | Resolution | Prevention Action |
 |---|---|---|---|---|
 | District geometry files are not versioned in this workspace | Repository currently ships modeled metrics but not bundled geospatial boundary assets | A strict geo-accurate district map could not be rendered in offline/CI-safe mode | Implemented deterministic AGS-based pseudo-coordinate anomaly map and documented constraint in dashboard caption and defense log | Add optional geometry package integration path in future maintenance cycle for production-grade choropleth |
+| Altair schema validation error on first dashboard run (`xOffset` unsupported) | Environment uses Altair v4 schema where `xOffset` channel is invalid | App failed at runtime before visualization render | Removed `xOffset` and rebuilt funnel view with Altair-v4-compatible encodings | Keep chart specs aligned to pinned visualization library versions and include startup smoke check |
+| App launch command/path confusion caused command-not-found and subsequent connection/404 symptoms | `make app` previously relied on global `streamlit` binary availability in PATH | App could fail to start in non-activated shells, leading to failed browser/API connection attempts | Updated Makefile app target to `$(PYTHON) -m streamlit run app/main.py`; verified successful startup | Prefer environment-bound command entrypoints for all executable targets |
+| Repository-wide lint gate currently fails in legacy modules | Pre-existing style/import violations in non-Phase-10 modules | Strict CI release gate cannot be fully green on `make lint` without remediation pass | Documented as non-blocking technical debt in final readiness report; runtime/data gates still pass | Schedule dedicated lint-remediation phase and then enforce lint as hard gate |
 
 ## Handoff Notes
 
