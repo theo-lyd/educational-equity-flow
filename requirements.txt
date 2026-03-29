@@ -6,4 +6,5 @@ dbt-duckdb==1.8.2
 great-expectations==0.18.21
 scikit-learn==1.5.2
 prophet==1.1.5
+statsmodels==0.14.2
 streamlit==1.39.0

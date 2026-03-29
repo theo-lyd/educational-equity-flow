@@ -14,6 +14,20 @@ from src.dashboard.phase10 import (
     load_stage_funnel,
     load_subject_resilience,
 )
+from src.dashboard.drilldown import (
+    build_leakage_timeseries_chart,
+    build_pipeline_chart,
+    build_region_comparison_chart,
+    build_subject_breakdown_chart,
+    build_transition_rates_chart,
+    get_cluster_summary,
+    get_district_cluster_peer_group,
+    get_district_list,
+    get_district_leakage_timeseries,
+    get_district_pipeline,
+    get_district_subject_breakdown,
+    get_region_comparison,
+)
 
 st.set_page_config(page_title="Educational Equity Flow", layout="wide")
 
@@ -327,7 +341,156 @@ def render_walkthrough(evidence: dict[str, object]) -> None:
         )
 
 
+def render_district_explorer() -> None:
+    st.subheader("District Explorer: Interactive Drill-Down")
+
+    # Get district list
+    district_list = get_district_list()
+    if district_list.empty:
+        st.warning("No districts available for exploration.")
+        return
+
+    # District selection
+    col1, col2 = st.columns(2)
+    with col1:
+        selected_region = st.selectbox(
+            "Select Region",
+            options=sorted(district_list["region"].unique()),
+            key="drill_region",
+        )
+
+    region_districts = district_list[district_list["region"] == selected_region].sort_values("ags")
+
+    with col2:
+        selected_ags = st.selectbox(
+            "Select District (AGS)",
+            options=region_districts["ags"].values,
+            format_func=lambda x: f"{x} - {region_districts[region_districts['ags'] == x].iloc[0]['region']}",
+            key="drill_ags",
+        )
+
+    if selected_ags:
+        st.markdown("---")
+
+        # Load district data
+        pipeline_df = get_district_pipeline(selected_ags)
+        leakage_df = get_district_leakage_timeseries(selected_ags)
+        subject_df = get_district_subject_breakdown(selected_ags)
+        cluster_id, peer_group = get_district_cluster_peer_group(selected_ags)
+
+        if not pipeline_df.empty:
+            # Key metrics for this district
+            row = pipeline_df.iloc[0]
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("End-to-End Rate", f"{row['end_to_end_rate']*100:.1f}%")
+            col2.metric("Stage 1 Students", f"{int(row['stage_1_students']):,}")
+            col3.metric("Stage 5 Completions", f"{int(row['stage_5_degree_completions']):,}")
+            if cluster_id is not None:
+                col4.metric("Cluster ID", f"{cluster_id}")
+
+            st.markdown("### Pipeline Progression")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.altair_chart(build_pipeline_chart(pipeline_df), use_container_width=True)
+            with col2:
+                st.altair_chart(build_transition_rates_chart(pipeline_df), use_container_width=True)
+
+        # Leakage trends
+        if not leakage_df.empty:
+            st.markdown("### Historical Leakage Trends")
+            st.altair_chart(build_leakage_timeseries_chart(leakage_df), use_container_width=True)
+
+        # Subject breakdown
+        if not subject_df.empty:
+            st.markdown("### Subject and Demographic Breakdown")
+            st.altair_chart(build_subject_breakdown_chart(subject_df), use_container_width=True)
+
+        # Peer group
+        if not peer_group.empty:
+            st.markdown("### Cluster Peer Group")
+            peer_display = peer_group[["ags", "region", "cluster_label"]].copy()
+            peer_display.columns = ["AGS", "Region", "Cluster Label"]
+            st.dataframe(peer_display, use_container_width=True, hide_index=True)
+
+
+def render_region_comparison() -> None:
+    st.subheader("Regional Comparison: District Performance")
+
+    district_list = get_district_list()
+    if district_list.empty:
+        st.warning("No districts available.")
+        return
+
+    selected_region = st.selectbox(
+        "Select Region to Compare",
+        options=sorted(district_list["region"].unique()),
+        key="region_comp",
+    )
+
+    region_df = get_region_comparison(selected_region)
+    if region_df.empty:
+        st.warning(f"No data for region: {selected_region}")
+        return
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric(f"Districts in {selected_region}", len(region_df))
+        st.metric("Avg End-to-End Rate", f"{region_df['end_to_end_completion_rate'].mean()*100:.1f}%")
+
+    with col2:
+        st.metric("Best Rate", f"{region_df['end_to_end_completion_rate'].max()*100:.1f}%")
+        st.metric("Worst Rate", f"{region_df['end_to_end_completion_rate'].min()*100:.1f}%")
+
+    st.markdown("### Scatter: Transition 1→2 vs End-to-End Rate")
+    st.altair_chart(build_region_comparison_chart(region_df), use_container_width=True)
+
+    st.markdown("### District Rankings in Region")
+    display_df = region_df[["ags", "end_to_end_completion_rate", "transition_rate_1_to_2"]].copy()
+    display_df.columns = ["AGS", "End-to-End Rate", "Grade 7→11 Rate"]
+    display_df = display_df.sort_values("End-to-End Rate", ascending=False).reset_index(drop=True)
+    display_df["End-to-End Rate"] = display_df["End-to-End Rate"].apply(lambda x: f"{x*100:.1f}%")
+    display_df["Grade 7→11 Rate"] = display_df["Grade 7→11 Rate"].apply(lambda x: f"{x*100:.1f}%")
+    st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+
+def render_cluster_analysis() -> None:
+    st.subheader("Cluster Segmentation Analysis")
+
+    cluster_summary = get_cluster_summary()
+    if cluster_summary.empty:
+        st.warning("No cluster summary available.")
+        return
+
+    # Summary metrics
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Number of Clusters", len(cluster_summary))
+    col2.metric("Total Districts Segmented", int(cluster_summary["district_count"].sum()))
+    col3.metric("Avg District Count per Cluster", f"{cluster_summary['district_count'].mean():.1f}")
+
+    st.markdown("### Cluster Profiles")
+    display_df = cluster_summary.copy()
+    display_df.columns = [
+        "Cluster ID",
+        "District Count",
+        "Avg End-to-End Rate",
+        "Avg Transition 4→5",
+        "Avg Leakage Diff",
+        "Cluster Label",
+    ]
+    display_df["Avg End-to-End Rate"] = display_df["Avg End-to-End Rate"].apply(
+        lambda x: f"{x*100:.1f}%" if pd.notna(x) else "N/A"
+    )
+    display_df["Avg Transition 4→5"] = display_df["Avg Transition 4→5"].apply(
+        lambda x: f"{x*100:.1f}%" if pd.notna(x) else "N/A"
+    )
+    display_df["Avg Leakage Diff"] = display_df["Avg Leakage Diff"].apply(
+        lambda x: f"{x:.3f}" if pd.notna(x) else "N/A"
+    )
+    st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+
 render_header()
+
 
 funnel_df = load_stage_funnel()
 sankey_df = build_sankey_series(funnel_df)
@@ -339,17 +502,30 @@ with st.sidebar:
     st.header("View Mode")
     view_mode = st.radio(
         "Select mode",
-        options=["Dashboard", "Reviewer Walkthrough"],
-        help="Use Reviewer Walkthrough during thesis defense presentation.",
+        options=[
+            "Dashboard Overview",
+            "Reviewer Walkthrough",
+            "District Explorer",
+            "Regional Comparison",
+            "Cluster Analysis",
+        ],
+        help="Drill-down views provide detailed district and regional exploration.",
     )
+
 
 render_kpis(funnel_df)
 
-if view_mode == "Dashboard":
+if view_mode == "Dashboard Overview":
     render_funnel(sankey_df)
     render_anomaly_map(anomaly_df)
     render_scd_timeline()
     render_subject_resilience(subject_df)
     render_evidence(evidence)
-else:
+elif view_mode == "Reviewer Walkthrough":
     render_walkthrough(evidence)
+elif view_mode == "District Explorer":
+    render_district_explorer()
+elif view_mode == "Regional Comparison":
+    render_region_comparison()
+elif view_mode == "Cluster Analysis":
+    render_cluster_analysis()

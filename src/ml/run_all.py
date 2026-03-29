@@ -21,10 +21,13 @@ try:
 except Exception:  # pragma: no cover - import availability differs across environments
     Prophet = None  # type: ignore[assignment]
 
+from src.ml.arima_forecast import build_arima_forecast
+
 
 ARTIFACT_DIR = Path("warehouse") / "artifacts"
 DB_PATH = Path("warehouse") / "analytics.duckdb"
 MIN_POINTS_FOR_PROPHET = 4
+MIN_POINTS_FOR_ARIMA = 5
 
 
 @dataclass
@@ -282,8 +285,24 @@ def build_linear_forecast(series: pd.DataFrame, periods: int = 5) -> pd.DataFram
     return pd.DataFrame(rows)
 
 
-def run_forecast(series: pd.DataFrame, periods: int = 5) -> tuple[pd.DataFrame, ForecastMeta]:
-    if len(series) >= MIN_POINTS_FOR_PROPHET and Prophet is not None:
+def run_forecast(
+    series: pd.DataFrame,
+    periods: int = 5,
+    method: str = "auto",
+) -> tuple[pd.DataFrame, ForecastMeta]:
+    """
+    Generate forecast using specified method.
+
+    Args:
+        series: DataFrame with 'year' and 'value' columns
+        periods: Number of periods to forecast
+        method: 'auto' (prophet > arima > linear), 'prophet', 'arima', or 'linear'
+
+    Returns:
+        Tuple of (forecast DataFrame, ForecastMeta)
+    """
+    # Try Prophet first (if method is auto or prophet)
+    if method in ("auto", "prophet") and len(series) >= MIN_POINTS_FOR_PROPHET and Prophet is not None:
         try:
             train = series.rename(columns={"year": "ds", "value": "y"}).copy()
             train["ds"] = pd.to_datetime(train["ds"].astype(str) + "-12-31")
@@ -309,38 +328,77 @@ def run_forecast(series: pd.DataFrame, periods: int = 5) -> tuple[pd.DataFrame, 
                 fallback_reason=None,
             )
         except Exception:
-            if len(series) >= 2:
-                out = build_linear_forecast(series, periods=periods)
-                return out, ForecastMeta(
-                    method="linear_trend",
-                    source_metric="stage_5_degree_completions",
-                    train_points=int(len(series)),
-                    fallback_reason="prophet_runtime_error",
-                )
+            if method == "prophet":
+                # If user explicitly requested Prophet, fall back to linear
+                if len(series) >= 2:
+                    out = build_linear_forecast(series, periods=periods)
+                    return out, ForecastMeta(
+                        method="linear_trend",
+                        source_metric="stage_5_degree_completions",
+                        train_points=int(len(series)),
+                        fallback_reason="prophet_runtime_error",
+                    )
+                else:
+                    out = build_naive_forecast(series, periods=periods)
+                    return out, ForecastMeta(
+                        method="naive_last_value",
+                        source_metric="stage_5_degree_completions",
+                        train_points=int(len(series)),
+                        fallback_reason="prophet_runtime_error",
+                    )
 
-            out = build_naive_forecast(series, periods=periods)
+    # Try ARIMA (if method is auto or arima)
+    if method in ("auto", "arima") and len(series) >= MIN_POINTS_FOR_ARIMA:
+        try:
+            out = build_arima_forecast(series, periods=periods, auto_order=True)
             return out, ForecastMeta(
-                method="naive_last_value",
+                method="arima",
                 source_metric="stage_5_degree_completions",
                 train_points=int(len(series)),
-                fallback_reason="prophet_runtime_error",
+                fallback_reason=None,
             )
+        except Exception:
+            if method == "arima":
+                # If user explicitly requested ARIMA, fall back to linear
+                if len(series) >= 2:
+                    out = build_linear_forecast(series, periods=periods)
+                    return out, ForecastMeta(
+                        method="linear_trend",
+                        source_metric="stage_5_degree_completions",
+                        train_points=int(len(series)),
+                        fallback_reason="arima_runtime_error",
+                    )
+                else:
+                    out = build_naive_forecast(series, periods=periods)
+                    return out, ForecastMeta(
+                        method="naive_last_value",
+                        source_metric="stage_5_degree_completions",
+                        train_points=int(len(series)),
+                        fallback_reason="arima_runtime_error",
+                    )
 
+    # Try linear forecast
     if len(series) >= 2:
         out = build_linear_forecast(series, periods=periods)
+        reason = (
+            "insufficient_time_points_for_prophet_and_arima"
+            if method == "auto"
+            else f"explicit_{method}_requested_but_failed"
+        )
         return out, ForecastMeta(
             method="linear_trend",
             source_metric="stage_5_degree_completions",
             train_points=int(len(series)),
-            fallback_reason="insufficient_time_points_for_prophet",
+            fallback_reason=reason,
         )
 
+    # Last resort: naive forecast
     out = build_naive_forecast(series, periods=periods)
     return out, ForecastMeta(
         method="naive_last_value",
         source_metric="stage_5_degree_completions",
         train_points=int(len(series)),
-        fallback_reason="insufficient_time_points_for_prophet",
+        fallback_reason="insufficient_time_points_for_all_methods",
     )
 
 
