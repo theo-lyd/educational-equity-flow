@@ -12,6 +12,7 @@ import pandas as pd
 
 DEFAULT_DB_PATH = Path("warehouse") / "analytics.duckdb"
 DEFAULT_ARTIFACT_DIR = Path("warehouse") / "artifacts"
+DEFAULT_GEOJSON_PATH = Path("data") / "reference" / "districts.geojson"
 
 
 def _connect(db_path: Path = DEFAULT_DB_PATH) -> duckdb.DuckDBPyConnection:
@@ -38,6 +39,80 @@ def ags_to_lat_lon(ags: str) -> tuple[float, float]:
     lat = 47.2 + (55.0 - 47.2) * lat_seed
     lon = 5.9 + (15.1 - 5.9) * lon_seed
     return round(lat, 5), round(lon, 5)
+
+
+def _normalize_ags(value: object) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    # District identifiers are commonly 5 digits in this pipeline.
+    return text.zfill(5)
+
+
+def _extract_feature_ags(feature: dict[str, object]) -> str | None:
+    props_obj = feature.get("properties")
+    properties = props_obj if isinstance(props_obj, dict) else {}
+    for key in ("ags", "AGS", "district_id", "id", "code"):
+        if key in properties:
+            return _normalize_ags(properties[key])
+    return _normalize_ags(feature.get("id"))
+
+
+def _collect_points(coords: object) -> list[tuple[float, float]]:
+    points: list[tuple[float, float]] = []
+
+    if isinstance(coords, list):
+        if len(coords) >= 2 and isinstance(coords[0], int | float):
+            lon = float(coords[0])
+            lat = float(coords[1])
+            points.append((lat, lon))
+        else:
+            for child in coords:
+                points.extend(_collect_points(child))
+
+    return points
+
+
+def _centroid_from_geometry(geometry: dict[str, object]) -> tuple[float, float] | None:
+    coords = geometry.get("coordinates")
+    points = _collect_points(coords)
+    if not points:
+        return None
+
+    lat = sum(p[0] for p in points) / len(points)
+    lon = sum(p[1] for p in points) / len(points)
+    return (round(lat, 5), round(lon, 5))
+
+
+def load_geojson_centroids(geojson_path: Path = DEFAULT_GEOJSON_PATH) -> pd.DataFrame:
+    if not geojson_path.exists():
+        return pd.DataFrame(columns=["ags", "lat", "lon"])
+
+    payload = json.loads(geojson_path.read_text(encoding="utf-8"))
+    features = payload.get("features", []) if isinstance(payload, dict) else []
+
+    rows: list[dict[str, object]] = []
+    for feature in features:
+        if not isinstance(feature, dict):
+            continue
+
+        ags = _extract_feature_ags(feature)
+        geometry_obj = feature.get("geometry")
+        geometry = geometry_obj if isinstance(geometry_obj, dict) else None
+        centroid = _centroid_from_geometry(geometry) if geometry else None
+
+        if ags is None or centroid is None:
+            continue
+
+        rows.append({"ags": ags, "lat": centroid[0], "lon": centroid[1]})
+
+    if not rows:
+        return pd.DataFrame(columns=["ags", "lat", "lon"])
+
+    df = pd.DataFrame(rows).drop_duplicates(subset=["ags"], keep="first")
+    return df[["ags", "lat", "lon"]]
 
 
 def load_stage_funnel(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
@@ -95,7 +170,10 @@ def build_sankey_series(stage_funnel: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def load_anomaly_map_data(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
+def load_anomaly_map_data(
+    db_path: Path = DEFAULT_DB_PATH,
+    geojson_path: Path = DEFAULT_GEOJSON_PATH,
+) -> pd.DataFrame:
     df = _fetch_df(
         """
         with leak as (
@@ -125,9 +203,28 @@ def load_anomaly_map_data(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
     if df.empty:
         return df
 
-    lat_lon = df["ags"].apply(ags_to_lat_lon)
-    df["lat"] = lat_lon.apply(lambda p: p[0])
-    df["lon"] = lat_lon.apply(lambda p: p[1])
+    df = df.copy()
+    df["ags"] = df["ags"].astype(str).str.zfill(5)
+
+    centroid_df = load_geojson_centroids(geojson_path=geojson_path)
+    if not centroid_df.empty:
+        df = df.merge(centroid_df, on="ags", how="left")
+    else:
+        df["lat"] = pd.NA
+        df["lon"] = pd.NA
+
+    missing_coords = df["lat"].isna() | df["lon"].isna()
+    fallback = df.loc[missing_coords, "ags"].apply(ags_to_lat_lon)
+    if not fallback.empty:
+        fallback_df = pd.DataFrame(fallback.tolist(), index=fallback.index, columns=["lat", "lon"])
+        df.loc[fallback_df.index, "lat"] = fallback_df["lat"]
+        df.loc[fallback_df.index, "lon"] = fallback_df["lon"]
+
+    df["map_source"] = "geojson"
+    df.loc[missing_coords, "map_source"] = "pseudo"
+
+    df["lat"] = df["lat"].astype(float)
+    df["lon"] = df["lon"].astype(float)
     return df
 
 

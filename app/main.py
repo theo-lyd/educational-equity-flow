@@ -155,10 +155,19 @@ def render_anomaly_map(anomaly_df: pd.DataFrame) -> None:
         st.warning("No anomaly data is available.")
         return
 
-    st.caption(
-        "Map uses deterministic AGS-based pseudo-coordinates in CI-safe mode "
-        "when official district geometries are not packaged."
-    )
+    if "map_source" in anomaly_df.columns:
+        source_counts = anomaly_df["map_source"].value_counts().to_dict()
+        geojson_count = int(source_counts.get("geojson", 0))
+        pseudo_count = int(source_counts.get("pseudo", 0))
+        st.caption(
+            f"Map coordinates: geojson={geojson_count}, pseudo-fallback={pseudo_count}. "
+            "Pseudo values are used when geometry is unavailable."
+        )
+    else:
+        st.caption(
+            "Map uses deterministic AGS-based pseudo-coordinates in CI-safe mode "
+            "when official district geometries are not packaged."
+        )
     map_chart = (
         alt.Chart(anomaly_df)
         .mark_circle(opacity=0.8)

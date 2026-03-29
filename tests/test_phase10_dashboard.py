@@ -5,7 +5,13 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
-from src.dashboard.phase10 import ags_to_lat_lon, build_sankey_series, load_scd_timeline
+from src.dashboard.phase10 import (
+    ags_to_lat_lon,
+    build_sankey_series,
+    load_anomaly_map_data,
+    load_geojson_centroids,
+    load_scd_timeline,
+)
 
 
 def test_ags_to_lat_lon_is_deterministic_and_in_bounds():
@@ -72,3 +78,102 @@ def test_load_scd_timeline_current_and_historical(tmp_path: Path):
     assert len(history_df) == 2
     assert set(current_df["record_type"]) == {"current"}
     assert set(history_df["record_type"]) == {"historical"}
+
+
+def test_load_geojson_centroids(tmp_path: Path):
+        geojson_path = tmp_path / "districts.geojson"
+        geojson_path.write_text(
+                """
+                {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "id": "1001",
+                            "properties": {"ags": "01001"},
+                            "geometry": {
+                                "type": "Polygon",
+                                "coordinates": [
+                                    [
+                                        [10.0, 50.0],
+                                        [10.4, 50.0],
+                                        [10.4, 50.4],
+                                        [10.0, 50.4],
+                                        [10.0, 50.0]
+                                    ]
+                                ]
+                            }
+                        }
+                    ]
+                }
+                """,
+                encoding="utf-8",
+        )
+
+        centroids = load_geojson_centroids(geojson_path=geojson_path)
+
+        assert len(centroids) == 1
+        assert set(centroids.columns) == {"ags", "lat", "lon"}
+        assert centroids.iloc[0]["ags"] == "01001"
+
+
+def test_load_anomaly_map_data_uses_geojson_and_fallback(tmp_path: Path):
+        db_path = tmp_path / "analytics.duckdb"
+        con = duckdb.connect(str(db_path))
+
+        con.execute(
+                """
+                create table gold_transition_rates as
+                select * from (values
+                        ('01001', 'Region A', 0.62, 0.60),
+                        ('01002', 'Region B', 0.55, 0.53)
+                ) t(ags, region, end_to_end_completion_rate, compounded_transition_rate)
+                """
+        )
+        con.execute(
+                """
+                create table gold_leakage_differential as
+                select * from (values
+                        ('01001', 'Region A', -0.03),
+                        ('01002', 'Region B', -0.02)
+                ) t(ags, region, leakage_differential)
+                """
+        )
+        con.close()
+
+        geojson_path = tmp_path / "districts.geojson"
+        geojson_path.write_text(
+                """
+                {
+                    "type": "FeatureCollection",
+                    "features": [
+                        {
+                            "type": "Feature",
+                            "properties": {"ags": "01001"},
+                            "geometry": {
+                                "type": "Polygon",
+                                "coordinates": [
+                                    [
+                                        [10.0, 50.0],
+                                        [10.4, 50.0],
+                                        [10.4, 50.4],
+                                        [10.0, 50.4],
+                                        [10.0, 50.0]
+                                    ]
+                                ]
+                            }
+                        }
+                    ]
+                }
+                """,
+                encoding="utf-8",
+        )
+
+        out = load_anomaly_map_data(db_path=db_path, geojson_path=geojson_path)
+
+        assert len(out) == 2
+        assert set(out["map_source"]).issubset({"geojson", "pseudo"})
+        assert "geojson" in set(out["map_source"])
+        assert "pseudo" in set(out["map_source"])
+        assert out["lat"].notna().all()
+        assert out["lon"].notna().all()
