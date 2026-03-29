@@ -1,0 +1,47 @@
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: educational-equity-flow-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      # Mount warehouse directory for persistent database
+      - ./warehouse:/app/warehouse
+      # Mount raw data directory
+      - ./data:/app/data
+    environment:
+      # Streamlit configuration
+      - STREAMLIT_CONFIG_LOGGER_LEVEL=info
+      - STREAMLIT_CLIENT_SHOWERRORDETAILS=true
+      # Python settings
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import streamlit; print('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network
+
+  # Optional: Lightweight artifacts server (view warehouse outputs)
+  artifacts:
+    image: nginx:1.25-alpine
+    container_name: educational-equity-flow-artifacts
+    ports:
+      - "8080:80"
+    volumes:
+      # Serve warehouse artifacts as static files
+      - ./warehouse/artifacts:/usr/share/nginx/html:ro
+    depends_on:
+      - dashboard
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
