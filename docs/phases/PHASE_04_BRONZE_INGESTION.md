@@ -71,6 +71,30 @@ Status: Completed (2026-03-28)
 ## Deliverable(s)
 - Python ingestion package, partitioned bronze parquet, metadata manifest.
 
+### Delivered implementation modules
+- `src/ingestion/scan_true_start.py`
+- `src/ingestion/normalizers.py`
+- `src/ingestion/csv_ingestor.py`
+- `src/ingestion/xlsx_ingestor.py`
+- `src/ingestion/xml_ingestor.py`
+- `src/ingestion/manifest.py`
+- `src/ingestion/run.py`
+- `tests/test_phase04_ingestion.py`
+
+### Bronze schema contract (canonical columns)
+- `dataset`
+- `source_file`
+- `year`
+- `ags`
+- `region`
+- `dimension_1`
+- `dimension_2`
+- `dimension_3`
+- `metric_name`
+- `raw_value`
+- `value`
+- `quality`
+
 ## Concrete Tasks
 - Implement true-start scanner for metadata-heavy CSVs.
 - Implement ISO-8859-1-safe CSV parsing and cleaning.
@@ -96,6 +120,18 @@ Status: Completed (2026-03-28)
 	- `warehouse/artifacts/ingest_bronze.json`
 	- `data/bronze/ingestion_manifest.json`
 
+## Operational Notes (Runbook)
+- Baseline execution command:
+	- `make ingest`
+- Full reset/rebuild of processed datasets:
+	- `python -m src.ingestion.run --source data/raw --target data/bronze --force`
+- Incremental rerun (manifest-aware):
+	- `python -m src.ingestion.run --source data/raw --target data/bronze`
+- Expected behavior:
+	- Unchanged files are skipped.
+	- Changed/new files are reprocessed only.
+	- Dataset-level cleanup prevents stale partitions on reprocess.
+
 ## Completion Checklist
 - [x] Implement true-start scanner for metadata-heavy CSVs.
 - [x] Implement ISO-8859-1-safe CSV parsing and cleaning.
@@ -105,9 +141,30 @@ Status: Completed (2026-03-28)
 - [x] Add tests for partitioned write, idempotency, and stale-partition cleanup.
 - [x] Validate full ingest and incremental re-run on repository raw files.
 
+## Architecture and Data Contract Decisions
+- Decision: canonical long-form Bronze schema across all source types.
+	- Benefit: simplifies Silver model unions and shared macros.
+	- Trade-off: some source-specific context is mapped into generic dimensions.
+- Decision: dataset/year partitioned parquet writes.
+	- Benefit: better query locality and incremental replacement behavior.
+	- Trade-off: requires careful stale-partition hygiene.
+- Decision: manifest SHA-256 change detection for selective processing.
+	- Benefit: idempotent reruns and lower runtime cost.
+	- Trade-off: manifest integrity becomes operationally important.
+
 ## Issues Encountered
 | Problem | Root Cause | Potential Implication(s) | Resolution | Prevention Action |
 |---|---|---|---|---|
 | `make test` failed despite successful `setup-venv` | `Makefile` defaulted to system `python`, not project `.venv` interpreter | Commands could fail in clean environments (`pytest`/deps not found) and break reproducibility | Updated `PYTHON` fallback logic to auto-prefer `.venv/bin/python` when present | Keep Make targets environment-aware and validate from fresh shell sessions |
 | Stale year partitions persisted after parser logic changes | Partitioned parquet writer overwrote touched paths but did not remove old dataset partitions | Downstream readers could observe outdated partitions and inflated/incorrect aggregates | Added dataset-level cleanup before rewriting a processed source dataset | Keep a regression test ensuring reprocess removes stale partitions (`test_phase04_reprocess_removes_stale_partitions`) |
 | `openpyxl` default-style warning in run/test output | Source XLSX files omit default style metadata | Warning noise could mask meaningful warnings and reduce signal in validation logs | Added targeted warning suppression for the known message in ingestion path and pytest filter for test output | Keep warning filters message-specific and revisit only if parsing behavior changes |
+
+## Residual Risks
+- Semantic drift in source labels/axes may require additional normalization mapping in later runs.
+- `unknown` year partitions can still appear when sources omit explicit time dimension.
+- Historical regional boundary changes are not yet handled at Bronze level (intended for Silver snapshots).
+
+## Handoff Readiness (to Phase 05)
+- Bronze ingestion is stable, tested, and idempotent.
+- Source contracts and Bronze schema are sufficient inputs for dbt Silver harmonization.
+- Remaining work is expected and scoped to Phase 05 (dbt project initialization, conformed dimensions, tests, snapshots).
