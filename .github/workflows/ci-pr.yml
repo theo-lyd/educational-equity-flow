@@ -39,7 +39,7 @@ jobs:
           dbt compile --profiles-dir .
 
       - name: Upload dbt parse artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dbt-pr-artifacts
           path: dbt/target/
