@@ -4,4 +4,4 @@ educational_equity_flow:
     dev:
       type: duckdb
       path: ../warehouse/analytics.duckdb
-      threads: 4
+      threads: "{{ env_var('DBT_THREADS', '4') | int }}"

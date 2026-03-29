@@ -6,6 +6,7 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  DBT_THREADS: "1"
 
 jobs:
   full-pipeline:
