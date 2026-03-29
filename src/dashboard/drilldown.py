@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 
 import altair as alt
@@ -15,10 +16,20 @@ def _connect(db_path: Path = DEFAULT_DB_PATH) -> duckdb.DuckDBPyConnection:
     return duckdb.connect(str(db_path), read_only=True)
 
 
+def _fetch_df(
+    query: str,
+    db_path: Path = DEFAULT_DB_PATH,
+    params: Sequence[object] | None = None,
+) -> pd.DataFrame:
+    with _connect(db_path) as con:
+        if params is None:
+            return con.execute(query).fetchdf()
+        return con.execute(query, params).fetchdf()
+
+
 def get_district_list(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
     """Load list of all districts with basic metrics."""
-    con = _connect(db_path)
-    df = con.execute(
+    return _fetch_df(
         """
         select
             ags,
@@ -27,17 +38,15 @@ def get_district_list(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
             compounded_transition_rate
         from gold_transition_rates
         order by region, ags
-        """
-    ).fetchdf()
-    con.close()
-    return df
+        """,
+        db_path=db_path,
+    )
 
 
 def get_district_pipeline(ags: str, db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
     """Get detailed stage-to-stage pipeline for a single district."""
-    con = _connect(db_path)
-    df = con.execute(
-        f"""
+    return _fetch_df(
+        """
         select
             ags,
             region,
@@ -70,11 +79,11 @@ def get_district_pipeline(ags: str, db_path: Path = DEFAULT_DB_PATH) -> pd.DataF
                 (stage_5_degree_completions / nullif(stage_1_students, 0))::numeric, 4
             ) as end_to_end_rate
         from gold_stage_funnel
-        where ags = '{ags}'
-        """
-    ).fetchdf()
-    con.close()
-    return df
+        where ags = ?
+        """,
+        db_path=db_path,
+        params=[ags],
+    )
 
 
 def get_district_leakage_timeseries(
@@ -82,9 +91,8 @@ def get_district_leakage_timeseries(
     db_path: Path = DEFAULT_DB_PATH,
 ) -> pd.DataFrame:
     """Get historical leakage differential trend for a district."""
-    con = _connect(db_path)
-    df = con.execute(
-        f"""
+    return _fetch_df(
+        """
         select
             year,
             leakage_differential,
@@ -94,12 +102,12 @@ def get_district_leakage_timeseries(
                 2
             ) as leakage_pct
         from gold_leakage_differential
-        where ags = '{ags}'
+        where ags = ?
         order by year
-        """
-    ).fetchdf()
-    con.close()
-    return df
+        """,
+        db_path=db_path,
+        params=[ags],
+    )
 
 
 def get_district_subject_breakdown(
@@ -107,9 +115,8 @@ def get_district_subject_breakdown(
     db_path: Path = DEFAULT_DB_PATH,
 ) -> pd.DataFrame:
     """Get subject and demographic breakdown for a district."""
-    con = _connect(db_path)
-    df = con.execute(
-        f"""
+    return _fetch_df(
+        """
         select
             hs_fg2_group,
             demographic_group,
@@ -121,12 +128,12 @@ def get_district_subject_breakdown(
                 4
             ) as pass_rate
         from gold_subject_resilience
-        where ags = '{ags}'
+        where ags = ?
         order by hs_fg2_group, demographic_group
-        """
-    ).fetchdf()
-    con.close()
-    return df
+        """,
+        db_path=db_path,
+        params=[ags],
+    )
 
 
 def get_district_cluster_peer_group(
@@ -157,9 +164,8 @@ def get_region_comparison(
     db_path: Path = DEFAULT_DB_PATH,
 ) -> pd.DataFrame:
     """Get all districts in a region for comparison."""
-    con = _connect(db_path)
-    df = con.execute(
-        f"""
+    return _fetch_df(
+        """
         select
             ags,
             region,
@@ -170,12 +176,12 @@ def get_region_comparison(
             transition_rate_3_to_4,
             transition_rate_4_to_5
         from gold_transition_rates
-        where region = '{region}'
+        where region = ?
         order by end_to_end_completion_rate desc
-        """
-    ).fetchdf()
-    con.close()
-    return df
+        """,
+        db_path=db_path,
+        params=[region],
+    )
 
 
 def get_cluster_summary(

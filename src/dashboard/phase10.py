@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Sequence
 from pathlib import Path
 
 import duckdb
@@ -15,6 +16,17 @@ DEFAULT_ARTIFACT_DIR = Path("warehouse") / "artifacts"
 
 def _connect(db_path: Path = DEFAULT_DB_PATH) -> duckdb.DuckDBPyConnection:
     return duckdb.connect(str(db_path), read_only=True)
+
+
+def _fetch_df(
+    query: str,
+    db_path: Path = DEFAULT_DB_PATH,
+    params: Sequence[object] | None = None,
+) -> pd.DataFrame:
+    with _connect(db_path) as con:
+        if params is None:
+            return con.execute(query).fetchdf()
+        return con.execute(query, params).fetchdf()
 
 
 def ags_to_lat_lon(ags: str) -> tuple[float, float]:
@@ -29,8 +41,7 @@ def ags_to_lat_lon(ags: str) -> tuple[float, float]:
 
 
 def load_stage_funnel(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
-    con = _connect(db_path)
-    df = con.execute(
+    return _fetch_df(
         """
         select
             ags,
@@ -41,10 +52,9 @@ def load_stage_funnel(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
             stage_4_university_students,
             stage_5_degree_completions
         from gold_stage_funnel
-        """
-    ).fetchdf()
-    con.close()
-    return df
+        """,
+        db_path=db_path,
+    )
 
 
 def build_sankey_series(stage_funnel: pd.DataFrame) -> pd.DataFrame:
@@ -86,8 +96,7 @@ def build_sankey_series(stage_funnel: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_anomaly_map_data(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
-    con = _connect(db_path)
-    df = con.execute(
+    df = _fetch_df(
         """
         with leak as (
             select
@@ -109,9 +118,9 @@ def load_anomaly_map_data(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
             ) as anomaly_score
         from gold_transition_rates t
         left join leak l using (ags, region)
-        """
-    ).fetchdf()
-    con.close()
+        """,
+        db_path=db_path,
+    )
 
     if df.empty:
         return df
@@ -123,8 +132,7 @@ def load_anomaly_map_data(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
 
 
 def load_subject_resilience(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
-    con = _connect(db_path)
-    df = con.execute(
+    return _fetch_df(
         """
         select
             hs_fg2_group,
@@ -135,16 +143,14 @@ def load_subject_resilience(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
         from gold_subject_resilience
         group by 1, 2
         order by avg_subject_completion_share desc
-        """
-    ).fetchdf()
-    con.close()
-    return df
+        """,
+        db_path=db_path,
+    )
 
 
 def load_scd_timeline(mode: str, db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
-    con = _connect(db_path)
     if mode == "current":
-        df = con.execute(
+        query = (
             """
             select
                 ags,
@@ -156,9 +162,9 @@ def load_scd_timeline(mode: str, db_path: Path = DEFAULT_DB_PATH) -> pd.DataFram
             from int_district_current
             order by ags
             """
-        ).fetchdf()
+        )
     else:
-        df = con.execute(
+        query = (
             """
             select
                 ags,
@@ -170,9 +176,9 @@ def load_scd_timeline(mode: str, db_path: Path = DEFAULT_DB_PATH) -> pd.DataFram
             from snapshots.snap_district_boundaries
             order by ags, dbt_valid_from
             """
-        ).fetchdf()
-    con.close()
-    return df
+        )
+
+    return _fetch_df(query, db_path=db_path)
 
 
 def load_evidence_metadata(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> dict[str, object]:
