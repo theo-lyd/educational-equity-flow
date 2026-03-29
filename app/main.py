@@ -21,6 +21,12 @@ from src.dashboard.drilldown import (
     get_district_subject_breakdown,
     get_region_comparison,
 )
+from src.dashboard.heterogeneity import (
+    format_effect_size,
+    format_pvalue,
+    load_demographic_group_comparison,
+    load_subject_heterogeneity_summary,
+)
 from src.dashboard.phase10 import (
     build_sankey_series,
     load_anomaly_map_data,
@@ -471,6 +477,127 @@ def render_region_comparison() -> None:
     st.dataframe(display_df, use_container_width=True, hide_index=True)
 
 
+def render_subject_heterogeneity() -> None:
+    st.subheader("Subject Heterogeneity Analysis: Statistical Test Results")
+    st.caption(
+        "Chi-square tests compare subject completion rates across demographic groups. "
+        "Significant p-values (< 0.05) indicate heterogeneous outcomes."
+    )
+
+    # Load heterogeneity summary
+    hetero_summary = load_subject_heterogeneity_summary()
+    if hetero_summary.empty:
+        st.warning("No heterogeneity data available.")
+        return
+
+    # Display summary table
+    st.markdown("### Overall Subject Heterogeneity Results")
+    display_summary = hetero_summary[
+        [
+            "hs_fg2_group",
+            "n_demographic_groups",
+            "mean_completion",
+            "std_completion",
+            "chi2_stat",
+            "chi2_pvalue",
+            "effect_size",
+        ]
+    ].copy()
+
+    display_summary.columns = [
+        "Subject",
+        "N Groups",
+        "Mean Completion",
+        "Std Dev",
+        "χ² Statistic",
+        "P-value",
+        "Cramér's V",
+    ]
+
+    # Format columns for display
+    display_summary["Mean Completion"] = display_summary["Mean Completion"].apply(
+        lambda x: f"{x:.2%}"
+    )
+    display_summary["Std Dev"] = display_summary["Std Dev"].apply(lambda x: f"{x:.3f}")
+    display_summary["χ² Statistic"] = display_summary["χ² Statistic"].apply(
+        lambda x: f"{x:.2f}" if pd.notna(x) else "N/A"
+    )
+
+    # Use format functions for p-value and effect size
+    display_summary["P-value"] = hetero_summary["chi2_pvalue"].apply(format_pvalue)
+    display_summary["Cramér's V"] = hetero_summary["effect_size"].apply(format_effect_size)
+
+    st.dataframe(display_summary, use_container_width=True, hide_index=True)
+
+    # Highlight significant subjects
+    significant_subjects = hetero_summary[hetero_summary["is_significant_alpha05"]]
+    if not significant_subjects.empty:
+        st.markdown("### Subjects with Significant Heterogeneity (p < 0.05)")
+        sig_text = ", ".join(
+            [f"**{subj}**" for subj in significant_subjects["hs_fg2_group"].values]
+        )
+        st.markdown(f"These subject groups show statistically significant differences across "
+                    f"demographic groups: {sig_text}")
+    else:
+        st.info(
+            "No subjects show statistically significant heterogeneity at α = 0.05. "
+            "Completion rates are relatively consistent across demographic groups."
+        )
+
+    # Detailed demographic breakdown
+    st.markdown("### Detailed Demographic Comparison by Subject")
+    selected_subject = st.selectbox(
+        "Select a subject to explore demographic breakdown:",
+        options=sorted(hetero_summary["hs_fg2_group"].unique()),
+        key="hetero_subject",
+    )
+
+    if selected_subject:
+        demo_comparison = load_demographic_group_comparison(selected_subject)
+        if not demo_comparison.empty:
+            # Display comparison table
+            display_demo = demo_comparison.copy()
+            display_demo.columns = [
+                "Demographic Group",
+                "Completion Rate",
+                "Passed Exams",
+                "Total Exams",
+                "N Districts",
+            ]
+            display_demo["Completion Rate"] = display_demo["Completion Rate"].apply(
+                lambda x: f"{x:.2%}"
+            )
+            st.dataframe(display_demo, use_container_width=True, hide_index=True)
+
+            # Visualization
+            chart = (
+                alt.Chart(demo_comparison)
+                .mark_bar(cornerRadius=4)
+                .encode(
+                    x=alt.X(
+                        "demographic_group:N",
+                        title="Demographic Group",
+                        sort="-y",
+                    ),
+                    y=alt.Y("completion_rate:Q", title="Completion Rate"),
+                    color=alt.Color(
+                        "completion_rate:Q",
+                        scale=alt.Scale(scheme="viridis"),
+                        legend=None,
+                    ),
+                    tooltip=[
+                        alt.Tooltip("demographic_group:N", title="Group"),
+                        alt.Tooltip("completion_rate:Q", format=".2%", title="Completion Rate"),
+                        alt.Tooltip("passed_exams:Q", format=",.0f", title="Passed Exams"),
+                        alt.Tooltip("total_exams:Q", format=",.0f", title="Total Exams"),
+                        alt.Tooltip("n_districts:Q", title="N Districts"),
+                    ],
+                )
+                .properties(height=340)
+            )
+            st.altair_chart(chart, use_container_width=True)
+
+
 def render_cluster_analysis() -> None:
     st.subheader("Cluster Segmentation Analysis")
 
@@ -526,6 +653,7 @@ with st.sidebar:
             "District Explorer",
             "Regional Comparison",
             "Cluster Analysis",
+            "Subject Heterogeneity",
         ],
         help="Drill-down views provide detailed district and regional exploration.",
     )
@@ -554,3 +682,5 @@ elif view_mode == "Regional Comparison":
     render_region_comparison()
 elif view_mode == "Cluster Analysis":
     render_cluster_analysis()
+elif view_mode == "Subject Heterogeneity":
+    render_subject_heterogeneity()
