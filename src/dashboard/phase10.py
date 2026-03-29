@@ -1,0 +1,193 @@
+"""Phase 10 dashboard data loaders and transforms."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+import duckdb
+import pandas as pd
+
+DEFAULT_DB_PATH = Path("warehouse") / "analytics.duckdb"
+DEFAULT_ARTIFACT_DIR = Path("warehouse") / "artifacts"
+
+
+def _connect(db_path: Path = DEFAULT_DB_PATH) -> duckdb.DuckDBPyConnection:
+    return duckdb.connect(str(db_path), read_only=True)
+
+
+def ags_to_lat_lon(ags: str) -> tuple[float, float]:
+    """Map AGS to deterministic pseudo-geographic coordinates within Germany-like bounds."""
+    digest = hashlib.md5(ags.encode("utf-8")).hexdigest()
+    lat_seed = int(digest[:8], 16) / 0xFFFFFFFF
+    lon_seed = int(digest[8:16], 16) / 0xFFFFFFFF
+
+    lat = 47.2 + (55.0 - 47.2) * lat_seed
+    lon = 5.9 + (15.1 - 5.9) * lon_seed
+    return round(lat, 5), round(lon, 5)
+
+
+def load_stage_funnel(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
+    con = _connect(db_path)
+    df = con.execute(
+        """
+        select
+            ags,
+            region,
+            stage_1_students,
+            stage_2_students,
+            stage_3_graduates,
+            stage_4_university_students,
+            stage_5_degree_completions
+        from gold_stage_funnel
+        """
+    ).fetchdf()
+    con.close()
+    return df
+
+
+def build_sankey_series(stage_funnel: pd.DataFrame) -> pd.DataFrame:
+    totals = {
+        "Stage 1: Grade 7": float(stage_funnel["stage_1_students"].fillna(0).sum()),
+        "Stage 2: Grade 11": float(stage_funnel["stage_2_students"].fillna(0).sum()),
+        "Stage 3: Graduation": float(stage_funnel["stage_3_graduates"].fillna(0).sum()),
+        "Stage 4: University": float(stage_funnel["stage_4_university_students"].fillna(0).sum()),
+        "Stage 5: Completion": float(stage_funnel["stage_5_degree_completions"].fillna(0).sum()),
+    }
+    return pd.DataFrame(
+        {
+            "source": [
+                "Stage 1: Grade 7",
+                "Stage 2: Grade 11",
+                "Stage 3: Graduation",
+                "Stage 4: University",
+            ],
+            "target": [
+                "Stage 2: Grade 11",
+                "Stage 3: Graduation",
+                "Stage 4: University",
+                "Stage 5: Completion",
+            ],
+            "value": [
+                totals["Stage 2: Grade 11"],
+                totals["Stage 3: Graduation"],
+                totals["Stage 4: University"],
+                totals["Stage 5: Completion"],
+            ],
+            "drop_from_previous": [
+                totals["Stage 1: Grade 7"] - totals["Stage 2: Grade 11"],
+                totals["Stage 2: Grade 11"] - totals["Stage 3: Graduation"],
+                totals["Stage 3: Graduation"] - totals["Stage 4: University"],
+                totals["Stage 4: University"] - totals["Stage 5: Completion"],
+            ],
+        }
+    )
+
+
+def load_anomaly_map_data(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
+    con = _connect(db_path)
+    df = con.execute(
+        """
+        with leak as (
+            select
+                ags,
+                region,
+                avg(leakage_differential) as mean_leakage_differential
+            from gold_leakage_differential
+            group by 1, 2
+        )
+        select
+            t.ags,
+            t.region,
+            t.end_to_end_completion_rate,
+            t.compounded_transition_rate,
+            coalesce(l.mean_leakage_differential, 0.0) as mean_leakage_differential,
+            (
+                (1.0 - coalesce(t.end_to_end_completion_rate, 0.0))
+                + abs(coalesce(l.mean_leakage_differential, 0.0))
+            ) as anomaly_score
+        from gold_transition_rates t
+        left join leak l using (ags, region)
+        """
+    ).fetchdf()
+    con.close()
+
+    if df.empty:
+        return df
+
+    lat_lon = df["ags"].apply(ags_to_lat_lon)
+    df["lat"] = lat_lon.apply(lambda p: p[0])
+    df["lon"] = lat_lon.apply(lambda p: p[1])
+    return df
+
+
+def load_subject_resilience(db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
+    con = _connect(db_path)
+    df = con.execute(
+        """
+        select
+            hs_fg2_group,
+            demographic_group,
+            avg(subject_completion_share) as avg_subject_completion_share,
+            sum(passed_exams) as passed_exams,
+            sum(total_passed_exams) as total_passed_exams
+        from gold_subject_resilience
+        group by 1, 2
+        order by avg_subject_completion_share desc
+        """
+    ).fetchdf()
+    con.close()
+    return df
+
+
+def load_scd_timeline(mode: str, db_path: Path = DEFAULT_DB_PATH) -> pd.DataFrame:
+    con = _connect(db_path)
+    if mode == "current":
+        df = con.execute(
+            """
+            select
+                ags,
+                region,
+                latest_year,
+                cast(null as timestamp) as dbt_valid_from,
+                cast(null as timestamp) as dbt_valid_to,
+                'current' as record_type
+            from int_district_current
+            order by ags
+            """
+        ).fetchdf()
+    else:
+        df = con.execute(
+            """
+            select
+                ags,
+                region,
+                latest_year,
+                dbt_valid_from,
+                dbt_valid_to,
+                'historical' as record_type
+            from snapshots.snap_district_boundaries
+            order by ags, dbt_valid_from
+            """
+        ).fetchdf()
+    con.close()
+    return df
+
+
+def load_evidence_metadata(artifact_dir: Path = DEFAULT_ARTIFACT_DIR) -> dict[str, object]:
+    report_path = artifact_dir / "phase07_report.json"
+    quality_path = artifact_dir / "phase08_quality_report.json"
+
+    report = json.loads(report_path.read_text(encoding="utf-8")) if report_path.exists() else {}
+    quality = json.loads(quality_path.read_text(encoding="utf-8")) if quality_path.exists() else {}
+
+    return {
+        "phase07_report_present": report_path.exists(),
+        "phase08_report_present": quality_path.exists(),
+        "phase07_cluster_count": report.get("cluster_count"),
+        "phase07_forecast_method": report.get("forecast_meta", {}).get("method"),
+        "phase08_status": quality.get("status"),
+        "phase08_fail_count": quality.get("fail_count"),
+        "phase08_warn_count": quality.get("warn_count"),
+    }

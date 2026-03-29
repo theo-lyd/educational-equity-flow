@@ -37,6 +37,12 @@ Notes:
 - `make dbt-snapshot` captures SCD Type 2 district-boundary history snapshots.
 - `make ml-run` executes Phase 07 clustering and forecasting artifact generation.
 - `make quality-check` executes Phase 08 quality/governance checks and writes `warehouse/artifacts/phase08_quality_report.json`.
+- `make app` launches the Phase 10 policy dashboard (funnel, anomaly map, SCD timeline, resilience, evidence panel).
+
+## Phase 10 Evidence
+
+- `docs/phase_10/THESIS_APPENDIX_EVIDENCE.md`
+- `docs/phase_10/DEFENSE_SCRIPT_AND_QA.md`
 
 ## CI Workflows (Phase 09)
 
