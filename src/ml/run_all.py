@@ -21,7 +21,10 @@ try:
 except Exception:  # pragma: no cover - import availability differs across environments
     Prophet = None  # type: ignore[assignment]
 
-from src.ml.arima_forecast import build_arima_forecast
+try:
+    from src.ml.arima_forecast import build_arima_forecast
+except Exception:  # pragma: no cover
+    build_arima_forecast = None  # type: ignore[assignment]
 
 
 ARTIFACT_DIR = Path("warehouse") / "artifacts"
@@ -302,7 +305,8 @@ def run_forecast(
         Tuple of (forecast DataFrame, ForecastMeta)
     """
     # Try Prophet first (if method is auto or prophet)
-    if method in ("auto", "prophet") and len(series) >= MIN_POINTS_FOR_PROPHET and Prophet is not None:
+    has_prophet = Prophet is not None and len(series) >= MIN_POINTS_FOR_PROPHET
+    if method in ("auto", "prophet") and has_prophet:
         try:
             train = series.rename(columns={"year": "ds", "value": "y"}).copy()
             train["ds"] = pd.to_datetime(train["ds"].astype(str) + "-12-31")

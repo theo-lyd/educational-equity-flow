@@ -6,14 +6,6 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from src.dashboard.phase10 import (
-    build_sankey_series,
-    load_anomaly_map_data,
-    load_evidence_metadata,
-    load_scd_timeline,
-    load_stage_funnel,
-    load_subject_resilience,
-)
 from src.dashboard.drilldown import (
     build_leakage_timeseries_chart,
     build_pipeline_chart,
@@ -22,11 +14,19 @@ from src.dashboard.drilldown import (
     build_transition_rates_chart,
     get_cluster_summary,
     get_district_cluster_peer_group,
-    get_district_list,
     get_district_leakage_timeseries,
+    get_district_list,
     get_district_pipeline,
     get_district_subject_breakdown,
     get_region_comparison,
+)
+from src.dashboard.phase10 import (
+    build_sankey_series,
+    load_anomaly_map_data,
+    load_evidence_metadata,
+    load_scd_timeline,
+    load_stage_funnel,
+    load_subject_resilience,
 )
 
 st.set_page_config(page_title="Educational Equity Flow", layout="wide")
@@ -362,10 +362,17 @@ def render_district_explorer() -> None:
     region_districts = district_list[district_list["region"] == selected_region].sort_values("ags")
 
     with col2:
+        def format_district(ags_val: str) -> str:
+            """Format district AGS for display."""
+            region = region_districts[region_districts["ags"] == ags_val].iloc[0][
+                "region"
+            ]
+            return f"{ags_val} - {region}"
+
         selected_ags = st.selectbox(
             "Select District (AGS)",
             options=region_districts["ags"].values,
-            format_func=lambda x: f"{x} - {region_districts[region_districts['ags'] == x].iloc[0]['region']}",
+            format_func=format_district,
             key="drill_ags",
         )
 
@@ -435,7 +442,8 @@ def render_region_comparison() -> None:
     col1, col2 = st.columns(2)
     with col1:
         st.metric(f"Districts in {selected_region}", len(region_df))
-        st.metric("Avg End-to-End Rate", f"{region_df['end_to_end_completion_rate'].mean()*100:.1f}%")
+        avg_rate = region_df["end_to_end_completion_rate"].mean() * 100
+        st.metric("Avg End-to-End Rate", f"{avg_rate:.1f}%")
 
     with col2:
         st.metric("Best Rate", f"{region_df['end_to_end_completion_rate'].max()*100:.1f}%")

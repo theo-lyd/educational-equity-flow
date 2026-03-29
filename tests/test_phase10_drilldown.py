@@ -115,7 +115,7 @@ class TestDistrictClusterPeerGroup:
     def test_invalid_ags_returns_none_empty(self) -> None:
         """Test that invalid AGS returns None and empty DataFrame."""
         cluster_id, peer_df = get_district_cluster_peer_group("invalid_ags_xyz")
-        assert cluster_id is None or isinstance(cluster_id, (int, type(None)))
+        assert cluster_id is None or isinstance(cluster_id, int)
         assert isinstance(peer_df, pd.DataFrame)
 
 

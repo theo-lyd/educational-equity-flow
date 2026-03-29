@@ -46,11 +46,29 @@ def get_district_pipeline(ags: str, db_path: Path = DEFAULT_DB_PATH) -> pd.DataF
             stage_3_graduates,
             stage_4_university_students,
             stage_5_degree_completions,
-            round((stage_2_students / nullif(stage_1_students, 0))::numeric, 4) as transition_1_to_2,
-            round((stage_3_graduates / nullif(stage_2_students, 0))::numeric, 4) as transition_2_to_3,
-            round((stage_4_university_students / nullif(stage_3_graduates, 0))::numeric, 4) as transition_3_to_4,
-            round((stage_5_degree_completions / nullif(stage_4_university_students, 0))::numeric, 4) as transition_4_to_5,
-            round((stage_5_degree_completions / nullif(stage_1_students, 0))::numeric, 4) as end_to_end_rate
+            round(
+                (stage_2_students / nullif(stage_1_students, 0))::numeric, 4
+            ) as transition_1_to_2,
+            round(
+                (stage_3_graduates / nullif(stage_2_students, 0))::numeric, 4
+            ) as transition_2_to_3,
+            round(
+                (
+                    stage_4_university_students
+                    / nullif(stage_3_graduates, 0)
+                )::numeric,
+                4
+            ) as transition_3_to_4,
+            round(
+                (
+                    stage_5_degree_completions
+                    / nullif(stage_4_university_students, 0)
+                )::numeric,
+                4
+            ) as transition_4_to_5,
+            round(
+                (stage_5_degree_completions / nullif(stage_1_students, 0))::numeric, 4
+            ) as end_to_end_rate
         from gold_stage_funnel
         where ags = '{ags}'
         """
@@ -127,7 +145,6 @@ def get_district_cluster_peer_group(
 
     district_record = cluster_df[cluster_df["ags"] == ags].iloc[0]
     cluster_id = int(district_record["cluster_id"])
-    cluster_label = district_record.get("cluster_label", f"Cluster {cluster_id}")
 
     peer_group = cluster_df[cluster_df["cluster_id"] == cluster_id].copy()
     peer_group = peer_group.sort_values("ags")

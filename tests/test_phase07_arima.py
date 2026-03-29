@@ -124,7 +124,7 @@ class TestBuildARIMAForecast:
     def test_forecast_bounds_correct(self, sample_series: pd.DataFrame) -> None:
         """Test that lower bound < mean < upper bound."""
         forecast = build_arima_forecast(sample_series, periods=3)
-        for idx, row in forecast.iterrows():
+        for _idx, row in forecast.iterrows():
             assert row["yhat_lower"] < row["yhat"] < row["yhat_upper"]
 
     def test_all_values_numeric(self, sample_series: pd.DataFrame) -> None:
