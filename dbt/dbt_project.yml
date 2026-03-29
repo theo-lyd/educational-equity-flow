@@ -21,6 +21,8 @@ models:
       +materialized: view
     intermediate:
       +materialized: table
+    marts:
+      +materialized: table
 
 snapshots:
   educational_equity_flow_dbt:

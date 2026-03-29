@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: gold_stage_funnel
+    description: Stage 1-5 district-level funnel metrics using canonical source mappings.
+    columns:
+      - name: ags
+        tests:
+          - not_null
+          - unique
+
+  - name: gold_transition_rates
+    description: District transition rates and end-to-end completion rates across funnel stages.
+    columns:
+      - name: ags
+        tests:
+          - not_null
+          - unique
+
+  - name: gold_leakage_differential
+    description: International vs domestic enrollment differential by district and subject group.
+    columns:
+      - name: ags
+        tests:
+          - not_null
+      - name: subject_group
+        tests:
+          - not_null
+
+  - name: gold_subject_resilience
+    description: Stage 5 subject-level completion distribution across HS-FG2 groups.
+    columns:
+      - name: ags
+        tests:
+          - not_null
+      - name: hs_fg2_group
+        tests:
+          - not_null
