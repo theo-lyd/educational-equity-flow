@@ -1,7 +1,7 @@
 VENV_PYTHON ?= .venv/bin/python
 PYTHON ?= $(if $(wildcard $(VENV_PYTHON)),$(VENV_PYTHON),python)
 
-.PHONY: setup-venv setup-venv-req install lint format test ingest profile-phase03 dbt-run dbt-test dbt-snapshot app
+.PHONY: setup-venv setup-venv-req install lint format test ingest profile-phase03 dbt-run dbt-test dbt-snapshot ml-run app
 
 setup-venv:
 	(python3 -m venv .venv || virtualenv .venv)
@@ -40,6 +40,9 @@ dbt-test:
 
 dbt-snapshot:
 	$(PYTHON) -m src.tools.dbt_runner snapshot
+
+ml-run:
+	$(PYTHON) -m src.ml.run_all
 
 app:
 	streamlit run app/main.py

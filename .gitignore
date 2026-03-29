@@ -191,6 +191,7 @@ cython_debug/
 # Project artifacts
 warehouse/*.duckdb
 warehouse/artifacts/*.json
+warehouse/artifacts/*.csv
 data/bronze/
 dbt/target/
 dbt/logs/
