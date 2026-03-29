@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_bronze_events
+    description: Canonical Silver staging view over all Bronze parquet events.
+    columns:
+      - name: dataset
+        tests:
+          - not_null
+      - name: source_file
+        tests:
+          - not_null
+      - name: ags
+        tests:
+          - not_null
+      - name: quality
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['ok', '-', '.', 'x', 'e']
+                quote: true

@@ -192,6 +192,9 @@ cython_debug/
 warehouse/*.duckdb
 warehouse/artifacts/*.json
 data/bronze/
+dbt/target/
+dbt/logs/
+dbt/.user.yml
 
 # Ruff stuff:
 .ruff_cache/

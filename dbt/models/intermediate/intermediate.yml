@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: int_metric_facts
+    description: Harmonized metric grain for downstream marts and ML features.
+    columns:
+      - name: cohort_key
+        tests:
+          - not_null
+      - name: ags
+        tests:
+          - not_null
+
+  - name: int_district_current
+    description: Latest known region mapping per AGS for current-state joins.
+    columns:
+      - name: ags
+        tests:
+          - not_null
+          - unique
+      - name: region
+        tests:
+          - not_null

@@ -5,12 +5,13 @@ from __future__ import annotations
 import argparse
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run dbt commands from the configured project dir.")
-    parser.add_argument("command", nargs="?", default="run", choices=["run", "test"])
+    parser.add_argument("command", nargs="?", default="run", choices=["run", "test", "snapshot"])
     return parser
 
 
@@ -27,8 +28,13 @@ def run_dbt(command: str, dbt_dir: str | None = None) -> int:
         )
         return 0
 
-    cmd = ["dbt", command]
-    completed = subprocess.run(cmd, cwd=project_dir, check=False)
+    dbt_executable = Path(sys.executable).with_name("dbt")
+    cmd = [str(dbt_executable if dbt_executable.exists() else "dbt"), command, "--profiles-dir", "."]
+    try:
+        completed = subprocess.run(cmd, cwd=project_dir, check=False)
+    except FileNotFoundError:
+        cmd = [sys.executable, "-m", "dbt.cli.main", command, "--profiles-dir", "."]
+        completed = subprocess.run(cmd, cwd=project_dir, check=False)
     return completed.returncode
 
 

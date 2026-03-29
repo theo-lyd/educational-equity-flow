@@ -1,0 +1,7 @@
+educational_equity_flow:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../warehouse/analytics.duckdb
+      threads: 4

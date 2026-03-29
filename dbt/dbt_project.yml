@@ -1,0 +1,27 @@
+name: educational_equity_flow_dbt
+version: 1.0.0
+config-version: 2
+
+profile: educational_equity_flow
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  educational_equity_flow_dbt:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: table
+
+snapshots:
+  educational_equity_flow_dbt:
+    +target_schema: snapshots

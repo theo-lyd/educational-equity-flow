@@ -31,7 +31,9 @@ Notes:
 - `make ingest` runs the Phase 04 Bronze ingestion and writes `warehouse/artifacts/ingest_bronze.json`.
 - Bronze output is written as partitioned parquet under `data/bronze/dataset=<dataset>/year=<year>/`.
 - Incremental/idempotent behavior is tracked in `data/bronze/ingestion_manifest.json`.
-- `make dbt-run` is wired and will no-op until dbt project files are implemented in later phases.
+- `make dbt-run` builds Silver dbt models.
+- `make dbt-test` runs dbt model tests.
+- `make dbt-snapshot` captures SCD Type 2 district-boundary history snapshots.
 
 ## Project Execution Guide
 
