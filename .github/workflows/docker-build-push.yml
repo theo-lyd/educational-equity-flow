@@ -23,6 +23,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      HAS_DOCKERHUB: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
     
     steps:
       - name: Checkout code
@@ -32,7 +34,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
       
       - name: Log in to Docker Hub
-        if: github.event_name != 'pull_request'
+        if: env.HAS_DOCKERHUB == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -45,13 +47,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Extract metadata
-        id: meta
+      - name: Extract metadata (GHCR)
+        id: meta_ghcr
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ${{ secrets.DOCKER_USERNAME }}/educational-equity-flow
-            ghcr.io/${{ github.repository }}
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Extract metadata (Docker Hub)
+        id: meta_dockerhub
+        if: env.HAS_DOCKERHUB == 'true'
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/educational-equity-flow
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
@@ -59,17 +72,38 @@ jobs:
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
       
-      - name: Build and push Docker image
+      - name: Build and push image (GHCR)
+        id: build_ghcr
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+          tags: ${{ steps.meta_ghcr.outputs.tags }}
+          labels: ${{ steps.meta_ghcr.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+      - name: Build and push image (Docker Hub)
+        id: build_dockerhub
+        if: env.HAS_DOCKERHUB == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta_dockerhub.outputs.tags }}
+          labels: ${{ steps.meta_dockerhub.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             BUILDKIT_INLINE_CACHE=1
       
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+      - name: Image digests
+        run: |
+          echo "GHCR digest: ${{ steps.build_ghcr.outputs.digest }}"
+          if [ "${{ env.HAS_DOCKERHUB }}" = "true" ]; then
+            echo "Docker Hub digest: ${{ steps.build_dockerhub.outputs.digest }}"
+          else
+            echo "Docker Hub publish skipped (missing DOCKER_USERNAME/DOCKER_PASSWORD secrets)."
+          fi
