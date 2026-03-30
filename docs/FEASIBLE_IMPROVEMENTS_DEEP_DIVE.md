@@ -1,6 +1,6 @@
 # Feasible Improvements: No Paid Materials Required
 
-**Analysis Date:** 2026-03-29  
+**Analysis Date:** 2026-03-30  
 **Focus:** Open-source only, free services, no paid subscriptions
 
 ---
@@ -26,7 +26,7 @@
 | 1️⃣3️⃣ | GitHub Actions Enhancements | 1-2d | MEDIUM | GH Actions free tier (2000min/month) |
 | 1️⃣4️⃣ | GeoJSON Integration | 1-2d | VERY HIGH | GADM/Geoboundaries/OSM free |
 | 1️⃣5️⃣ | Subject Heterogeneity | 1-2w | HIGH | Pure statistical analysis, free tools |
-| 1️⃣6️⃣ | Causal Inference* | 2-3w | VERY HIGH | DoWhy, econml are free OSS |
+| 1️⃣6️⃣ | Causal Inference Extensions* | 2-3w | VERY HIGH | DoWhy, econml are free OSS |
 | 1️⃣7️⃣ | Open-Source Observability* | 1-2w | MEDIUM | Prometheus/Loki/ELK stack (free) |
 | 1️⃣8️⃣ | Data Archival | 1-2d | LOW | Pure Python + file system operations |
 
@@ -38,6 +38,13 @@
 - ✅ **15/18 improvements** can be implemented with ZERO paid software/services
 - ✅ **12/18 improvements** require only data you already have
 - ⚠️ **3/18 improvements** depend on having additional data (individual-level student records, policy implementation history)
+
+### Update Since Prior Revision (2026-03-30)
+
+- Baseline causal inference capability is now implemented in the dashboard using only existing open-source stack.
+- Causal hardening updates are complete: payload validation, SMD covariate-balance diagnostics, and small-sample ATE guardrails.
+- Causal and UI wiring regression tests were added and integrated into the passing project test suite.
+- This document now treats causal work here as **extensions beyond the delivered baseline**.
 
 ---
 

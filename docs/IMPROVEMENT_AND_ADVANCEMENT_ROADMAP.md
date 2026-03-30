@@ -1,7 +1,7 @@
 # Improvement and Advancement Roadmap
 
-**Date:** 2026-03-29  
-**Current Status:** Phase 10 Complete (Dashboard & Thesis Ready)  
+**Date:** 2026-03-30  
+**Current Status:** Phase 10 Complete + Causal Hardening Follow-Up Complete (Dashboard & Thesis Ready)  
 **Scope:** Strategic opportunities across technical, analytical, and operational domains
 
 ---
@@ -20,6 +20,13 @@ The educational-equity-flow system has achieved core functionality through Phase
 - Integrate official GeoJSON for district mapping
 - Add incremental refresh scheduling
 - Implement advanced forecasting methods
+
+### Update Since Prior Revision (2026-03-30)
+
+- Causal inference panel has been implemented in the dashboard (matching workflow, ATE/CI, and counterfactual scenarios).
+- Causal hardening pass is complete (payload guards, SMD diagnostics, small-sample ATE safeguards).
+- Automated coverage expanded with causal unit tests and UI wiring regression tests.
+- Project test baseline is currently green at 109 passing tests.
 
 ---
 
@@ -382,9 +389,9 @@ def ensemble_forecast(series, features) -> pd.DataFrame:
 
 ### 3.2 Causal Inference & Intervention Effects
 
-**Current State:** Observational analytics only (no causal claims)  
-**Gap:** Can't answer "what if we implement policy X?"  
-**Effort:** 2-3 weeks (requires new data collection)
+**Current State:** Baseline observational causal module is implemented in dashboard (matching-based diagnostics, ATE/CI, and scenario simulation).  
+**Gap:** No policy rollout/event dataset for stronger quasi-experimental identification.  
+**Effort:** 2-3 weeks for advanced methods once additional temporal-policy data is available.
 
 **Conceptual Path:**
 
