@@ -27,6 +27,20 @@ make app
 
 Important: pick one setup path (`setup-venv` or `setup-venv-req`). Do not run both in sequence for the same environment.
 
+## How to Launch (Non-Technical)
+
+If you prefer a one-click launch experience:
+
+- Double-click `Educational-Equity-Flow.desktop`.
+- This runs `run_full_system.sh`, which prepares data and starts the dashboard.
+- The app opens at `http://localhost:8501` once startup is complete.
+
+If desktop launch is blocked by your system policy, run this command in a terminal:
+
+```bash
+./run_full_system.sh
+```
+
 Notes:
 - `make ingest` runs the Phase 04 Bronze ingestion and writes `warehouse/artifacts/ingest_bronze.json`.
 - Bronze output is written as partitioned parquet under `data/bronze/dataset=<dataset>/year=<year>/`.
