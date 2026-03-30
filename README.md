@@ -44,6 +44,11 @@ Notes:
 - `docs/phase_10/THESIS_APPENDIX_EVIDENCE.md`
 - `docs/phase_10/DEFENSE_SCRIPT_AND_QA.md`
 
+## Changelog (Recent)
+
+- 2026-03-30: Added Phase 10 causal inference view in the dashboard with propensity-score matching, ATE estimation, confidence intervals, and counterfactual scenario simulation.
+- 2026-03-30: Hardened causal analysis with payload-key validation in UI, small-sample safeguards for ATE, and covariate-balance diagnostics via standardized mean differences (SMD), plus regression tests.
+
 ## CI Workflows (Phase 09)
 
 - `.github/workflows/ci-pr.yml`: pull-request slim checks (lint, pytest, dbt parse/compile).
