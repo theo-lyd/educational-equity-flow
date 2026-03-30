@@ -73,7 +73,7 @@ Run stages in this order so outputs stay deterministic and easy to debug.
 | 8 | Gold leakage marts | `dbt run --select marts` | Final funnel, transition, leakage differential, and subject-level marts materialized. |
 | 9 | Gold quality + governance checks | `great_expectations checkpoint run leakage_pipeline_checkpoint` | GE validation results generated; critical failures block progression. |
 | 10 | Intelligence layer | `python -m src.ml.run_all` | Cluster assignments and 5-year forecasts generated in `warehouse/artifacts/`. |
-| 11 | Dashboard run | `streamlit run app/main.py` | Interactive dashboard starts and loads funnel, anomaly, and timeline views from gold outputs. |
+| 11 | Dashboard run | `streamlit run app/main.py` | Interactive dashboard starts and loads funnel, anomaly, timeline, resilience, and causal-inference views from gold outputs. |
 
 Acceptance checks after stage execution:
 - `data/bronze/` contains new partition folders for each completed stage.

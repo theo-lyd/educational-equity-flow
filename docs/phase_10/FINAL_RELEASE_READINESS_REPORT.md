@@ -1,7 +1,7 @@
 # Final Release Readiness Report
 
-Date: 2026-03-29
-Scope: Repository-wide final pass after Phase 10 completion
+Date: 2026-03-30
+Scope: Repository-wide final pass after Phase 10 completion and causal hardening follow-up
 
 ## Summary Verdict
 
@@ -24,7 +24,7 @@ Overall release posture: Conditionally ready for thesis defense/demo workflows, 
 8. `DBT_THREADS=1 make dbt-snapshot` -> PASS
 9. `make ml-run` -> PASS
 10. `make quality-check` -> PASS
-11. `make test` -> PASS (13 passed)
+11. `make test` -> PASS (109 passed)
 12. `make app` smoke launch -> PASS (Streamlit server started and exposed local/network URLs)
 
 ## Key Observations
@@ -33,6 +33,8 @@ Overall release posture: Conditionally ready for thesis defense/demo workflows, 
 - App launch reliability improved by changing Makefile app target to environment-aware invocation:
   - `$(PYTHON) -m streamlit run app/main.py`
 - Reviewer Walkthrough mode is now available in sidebar for defense-day guided presentation.
+- Causal Inference mode is available in sidebar with matching diagnostics, ATE/CI reporting, and scenario simulation.
+- Hardening updates added payload validation in UI, SMD covariate-balance diagnostics, and small-sample ATE safeguards.
 
 ## Non-Blocking Warnings
 

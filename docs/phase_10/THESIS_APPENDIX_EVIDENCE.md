@@ -6,7 +6,7 @@
 - Transformation: dbt on DuckDB builds Silver harmonization models and Gold policy marts.
 - Intelligence: clustering and forecasting artifacts generated in `warehouse/artifacts/`.
 - Governance: quality checks enforce referential integrity, freshness, and operational thresholds.
-- Delivery: Streamlit dashboard exposes leakage funnel, anomaly map, SCD timeline, and resilience views.
+- Delivery: Streamlit dashboard exposes leakage funnel, anomaly map, SCD timeline, resilience views, and an observational causal analysis panel.
 
 ## Lineage Summary
 
@@ -16,6 +16,7 @@
 4. Gold marts -> ML pipeline (`src/ml/run_all.py`) -> phase 07 artifacts
 5. Gold marts + artifacts -> quality checks (`src/quality/run_checks.py`) -> phase 08 report
 6. Gold marts + snapshot history -> Streamlit (`app/main.py`) for policy interpretation
+7. Gold transition/leakage outputs -> Causal module (`src/dashboard/causal_inference.py`) for matching diagnostics, ATE estimation, and counterfactual scenarios
 
 ## Reproducibility Checklist
 
@@ -61,3 +62,4 @@
 - dbt assertions via `make dbt-test`.
 - governance checks via `make quality-check`.
 - CI orchestration checks in `.github/workflows/`.
+- Causal analysis coverage includes `tests/test_causal_inference.py` and `tests/test_causal_ui_wiring.py`.

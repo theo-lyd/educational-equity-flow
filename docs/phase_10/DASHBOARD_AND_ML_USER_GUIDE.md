@@ -10,10 +10,11 @@
 1. [Overview](#overview)
 2. [Dashboard Features and Components](#dashboard-features-and-components)
 3. [Dashboard Tabs and Charts](#dashboard-tabs-and-charts)
-4. [ML Functionality](#ml-functionality)
-5. [How to Use the Dashboard](#how-to-use-the-dashboard)
-6. [Interpretation Guide](#interpretation-guide)
-7. [Troubleshooting](#troubleshooting)
+4. [Causal Inference View](#causal-inference-view)
+5. [ML Functionality](#ml-functionality)
+6. [How to Use the Dashboard](#how-to-use-the-dashboard)
+7. [Interpretation Guide](#interpretation-guide)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -27,6 +28,7 @@ The **Educational Equity and Talent Leakage Observatory** is an interactive Stre
 - **Geographic Prioritization**: Identify districts with highest risk scores
 - **Temporal Consistency**: Track boundary changes and their impact on time-series interpretation
 - **Subject-Level Heterogeneity**: Understand completion rates by subject and demographic group
+- **Observational Causal Analysis**: Estimate matched treatment effects and run policy counterfactual scenarios
 - **Reproducibility Evidence**: Access metadata about underlying ML models and data quality
 
 ### Key Statistics
@@ -62,8 +64,9 @@ The dashboard will expose URLs on `localhost:8501` and network interfaces.
 │                  (app/main.py)                           │
 ├─────────────────────────────────────────────────────────┤
 │  View Selector (Sidebar)                                │
-│  • Dashboard Mode (Full analytics view)                 │
-│  • Reviewer Walkthrough Mode (5-step guided tour)       │
+│  • Dashboard Overview / Reviewer Walkthrough            │
+│  • District/Regional drilldowns + cluster views         │
+│  • Subject heterogeneity + causal inference             │
 ├─────────────────────────────────────────────────────────┤
 │           Data Layer: Dashboard Data Loaders             │
 │          (src/dashboard/phase10.py)                      │
@@ -382,7 +385,37 @@ Four key points about evidence chain:
 
 ---
 
-### 8. **Reviewer Walkthrough Mode** (Guided Defense Presentation)
+### 8. **Causal Inference View** (Observational Policy Simulation)
+
+**Location:** Sidebar -> "Causal Inference"
+**Purpose:** Provide assumption-aware treatment effect estimates for policy prioritization.
+
+#### What this panel includes
+
+1. **Average Treatment Effect (ATE) summary**
+   - Point estimate, standard error, and 95% confidence interval.
+   - Significance badge based on whether the CI excludes zero.
+
+2. **Matching quality metrics**
+   - Treated/control counts, matched pairs, and match rate.
+
+3. **Balance diagnostics**
+   - Propensity-score means before/after matching.
+   - Standardized Mean Differences (SMD) for key confounders (`transition_rate`, `leakage_score`).
+
+4. **Counterfactual scenarios**
+   - Scenario selector (`tutoring_boost`, `delayed_entry`, `remediation`) and effect-size slider.
+   - Aggregate outcome shift and district-level effect distribution chart.
+
+#### Guardrails and interpretation
+
+- The dashboard validates required causal payload keys before rendering and fails safely with an error message if keys are missing.
+- For very small treated/control groups, ATE uncertainty is intentionally conservative (SE = 0 with point CI) to avoid unstable variance behavior.
+- This is observational evidence, not randomized proof; interpret under explicit assumptions (no unmeasured confounding, overlap/positivity, model dependence).
+
+---
+
+### 9. **Reviewer Walkthrough Mode** (Guided Defense Presentation)
 
 **Location:** Sidebar toggle → "Reviewer Walkthrough" option  
 **Purpose:** Step-by-step narrative guide for thesis defense presentation
@@ -646,6 +679,7 @@ Evidence Appendix section
 | Question | Where to Look | How to Interpret |
 |----------|---------------|-----------------|
 | "Which districts are struggling most?" | Anomaly Map (large orange bubbles) | Size = severity, click for tooltip |
+| "What is the estimated intervention effect?" | Causal Inference view (ATE + CI) | CI excluding zero indicates stronger evidence under assumptions |
 | "Is there a problem in early education or late?" | Funnel chart drop line | Steepest segment shows biggest issue |
 | "Are some subjects worse than others?" | Subject Resilience chart | Shorter bars = lower completion |
 | "Do demographics matter?" | Subject Resilience colors | Different colors = different groups |
@@ -771,7 +805,7 @@ Observe: Stage 5 completions dropped 30% year-over-year in District X
 | KPI metrics empty | Shows 0 for all four KPIs | Verify `gold_stage_funnel` has data rows and non-null count values |
 | Reviewer Walkthrough tabs all blank | Tabs visible but no content | Rare rendering bug; refresh page or clear browser cache |
 | Forecast shows exactly last value repeated | Forecast all yhat values identical | Likely fallback to naive_last_value method; check forecast method in Evidence panel |
-| SCD Historical mode table empty | Historical tab shows no rows | First run (no snapshots created yet); run `make snapshot` to generate |
+| SCD Historical mode table empty | Historical tab shows no rows | First run (no snapshots created yet); run `make dbt-snapshot` to generate |
 
 ### Debug Commands
 
@@ -790,6 +824,9 @@ python -m src.ml.run_all
 
 # Test dashboard data layer
 python -c "from src.dashboard.phase10 import load_stage_funnel; print(load_stage_funnel())"
+
+# Test causal module and UI wiring
+.venv/bin/python -m pytest tests/test_causal_inference.py tests/test_causal_ui_wiring.py -q
 
 # Full pipeline reset (if needed)
 make clean && make install && make ingest && make dbt-run && make ml-run
@@ -826,11 +863,14 @@ make clean && make install && make ingest && make dbt-run && make ml-run
 │   └── main.py                    # Dashboard UI (Streamlit)
 ├── src/
 │   ├── dashboard/
-│   │   └── phase10.py             # Data loaders for dashboard
+│   │   ├── phase10.py             # Data loaders for dashboard
+│   │   └── causal_inference.py    # Causal analysis and diagnostics helpers
 │   └── ml/
 │       └── run_all.py             # Clustering + forecasting
 ├── tests/
-│   └── test_phase10_dashboard.py  # Unit tests for data layer
+│   ├── test_phase10_dashboard.py  # Unit tests for dashboard data layer
+│   ├── test_causal_inference.py   # Unit tests for causal module
+│   └── test_causal_ui_wiring.py   # Regression tests for causal route/payload wiring
 ├── warehouse/
 │   ├── analytics.duckdb           # DuckDB database (Gold + snapshots)
 │   └── artifacts/
@@ -839,7 +879,7 @@ make clean && make install && make ingest && make dbt-run && make ml-run
 │       └── phase07_report.json
 └── docs/
     └── phase_10/
-        ├── DASHBOARD_USER_GUIDE.md      # This file
+      ├── DASHBOARD_AND_ML_USER_GUIDE.md  # This file
         ├── DEFENSE_SCRIPT_AND_QA.md     # Thesis defense talking points
         └── THESIS_APPENDIX_EVIDENCE.md  # Reproducibility details
 ```

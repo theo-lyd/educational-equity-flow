@@ -1,13 +1,13 @@
 # Phase 10: Dashboard, Thesis Evidence & Defense
 
-Status: Completed (2026-03-29)
+Status: Completed and Hardened (2026-03-30)
 
 ## Objective(s)
 - Deliver executive storytelling and thesis-grade reproducibility evidence.
 
 ## 5W1H
 
-- What: Built a data-driven Streamlit dashboard with leakage funnel, district anomaly map, SCD boundary timeline toggle, and subject resilience views; added thesis appendix and defense/Q&A artifacts.
+- What: Built a data-driven Streamlit dashboard with leakage funnel, district anomaly map, SCD boundary timeline toggle, subject resilience views, and a causal inference panel (matching, ATE, confidence intervals, and counterfactual scenarios); added thesis appendix and defense/Q&A artifacts.
 - Why: Convert technical pipeline outputs into interpretable policy storytelling while preserving reproducibility and technical defense readiness.
 - Who: Project maintainer and Copilot coding agent as implementation owner; thesis reviewers and policy stakeholders as end users.
 - Where: `app/main.py`, `src/dashboard/phase10.py`, `docs/phase_10/*`, and Phase 10 run records in this document.
@@ -15,13 +15,14 @@ Status: Completed (2026-03-29)
 - How: Queried Gold/Snapshot tables from DuckDB, rendered interactive visuals with Streamlit + Altair, and documented defense evidence and risk responses.
 
 ## Deliverable(s)
-- Streamlit dashboard, thesis appendix artifacts, defense narrative.
+- Streamlit dashboard (including causal inference view), thesis appendix artifacts, defense narrative.
 
 ### Delivered Assets
 
 - Dashboard implementation:
 	- `app/main.py`
 	- `src/dashboard/phase10.py`
+	- `src/dashboard/causal_inference.py`
 	- `src/dashboard/__init__.py`
 - Thesis evidence appendix:
 	- `docs/phase_10/THESIS_APPENDIX_EVIDENCE.md`
@@ -29,11 +30,14 @@ Status: Completed (2026-03-29)
 	- `docs/phase_10/DEFENSE_SCRIPT_AND_QA.md`
 - Test coverage for Phase 10 dashboard data logic:
 	- `tests/test_phase10_dashboard.py`
+	- `tests/test_causal_inference.py`
+	- `tests/test_causal_ui_wiring.py`
 
 ## Concrete Tasks
 - Build leakage funnel Sankey and district anomaly map.
 - Build SCD timeline toggle (historical/current boundaries).
 - Add subject-level talent resilience visuals.
+- Add causal inference workflow (matching, ATE/CI, and scenario simulation).
 - Build evidence appendix (architecture, lineage, tests, model cards).
 - Prepare defense script and Q&A risk log.
 
@@ -43,6 +47,7 @@ Status: Completed (2026-03-29)
 - District anomaly map uses deterministic AGS-based pseudo-coordinates for CI-safe portability when official district geometries are not packaged.
 - SCD timeline toggle switches between `int_district_current` (current) and `snapshots.snap_district_boundaries` (historical) records.
 - Evidence panel surfaces phase-07/08 artifact metadata for reproducibility visibility in the dashboard.
+- Causal panel includes payload-key guards, small-sample ATE safety behavior, and standardized mean-difference diagnostics.
 
 ## Done Criteria
 - Reviewer can reproduce end-to-end results from clean checkout.
@@ -51,15 +56,16 @@ Status: Completed (2026-03-29)
 ### Done Criteria Status
 
 - Met: Dashboard now presents phase-aligned policy visuals from warehouse Gold/Snapshot tables.
+- Met: Causal view is integrated with explicit observational assumptions and diagnostics.
 - Met: Appendix and defense narrative artifacts document reproducibility and technical scrutiny responses.
-- Met: New Phase 10 data-layer tests verify deterministic coordinate mapping, funnel transform shape, and SCD mode loading behavior.
+- Met: New dashboard and causal tests verify deterministic data-layer behavior, causal diagnostics outputs, and route/payload UI guards.
 
 ## Validation Evidence
 - Add reproducibility run logs and final screenshot pack.
 
 ### Executed Validation
 
-- `make test` -> PASS (includes `tests/test_phase10_dashboard.py`)
+- `make test` -> PASS (109 passed, includes dashboard and causal test suites)
 - `DBT_THREADS=1 make dbt-run` -> PASS
 - `DBT_THREADS=1 make dbt-test` -> PASS
 - `make app` entrypoint available for dashboard launch and reviewer walkthrough.
