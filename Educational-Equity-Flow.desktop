@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Educational Equity Flow
+Comment=Run full data pipeline and launch the dashboard
+Path=/workspaces/educational-equity-flow
+Exec=/bin/bash -lc "cd /workspaces/educational-equity-flow && ./run_full_system.sh"
+Terminal=true
+Categories=Education;Science;Development;
