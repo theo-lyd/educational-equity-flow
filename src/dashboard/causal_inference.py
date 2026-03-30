@@ -200,6 +200,10 @@ def estimate_ate(
 
     ate = float(treated.mean() - untreated.mean())
 
+    # Guard very small groups to avoid unstable variance estimates and warnings.
+    if len(treated) < 2 or len(untreated) < 2:
+        return ate, 0.0, (ate, ate)
+
     # Standard error of difference in means.
     se = float(
         np.sqrt((treated.var(ddof=1) / len(treated)) + (untreated.var(ddof=1) / len(untreated)))
@@ -210,6 +214,19 @@ def estimate_ate(
     ci_lower = ate - 1.96 * se
     ci_upper = ate + 1.96 * se
     return ate, se, (ci_lower, ci_upper)
+
+
+def _standardized_mean_difference(treated: pd.Series, untreated: pd.Series) -> float:
+    """Compute standardized mean difference for one covariate."""
+    if len(treated) == 0 or len(untreated) == 0:
+        return 0.0
+
+    treated_std = treated.std(ddof=1)
+    untreated_std = untreated.std(ddof=1)
+    pooled_std = np.sqrt((treated_std**2 + untreated_std**2) / 2.0)
+    if not np.isfinite(pooled_std) or pooled_std == 0:
+        return 0.0
+    return float((treated.mean() - untreated.mean()) / pooled_std)
 
 
 @st.cache_data(ttl=3600)
@@ -260,7 +277,7 @@ def run_causal_analysis_pipeline(
     # Step 3: Estimate ATE
     ate, se, ci = estimate_ate(matched_data, outcome_col="outcome")
 
-    # Compute covariate balance before/after matching
+    # Compute propensity-score balance before/after matching
     treated_ps = ps_data[ps_data["treatment_simulated"] == 1]["propensity_score"]
     untreated_ps = ps_data[ps_data["treatment_simulated"] == 0]["propensity_score"]
     balance_before = {
@@ -279,6 +296,33 @@ def run_causal_analysis_pipeline(
         ),
     }
 
+    # Covariate balance diagnostics using standardized mean differences (SMD).
+    covariates = ["transition_rate", "leakage_score"]
+    matched_covariates = matched_data[["ags", "treatment_simulated"]].merge(
+        data[["ags"] + covariates],
+        on="ags",
+        how="left",
+    )
+    covariate_balance: list[dict[str, float | str]] = []
+    for covariate in covariates:
+        treated_before = data[data["ags"].isin(ps_data[ps_data["treatment_simulated"] == 1]["ags"])][covariate]
+        untreated_before = data[data["ags"].isin(ps_data[ps_data["treatment_simulated"] == 0]["ags"])][covariate]
+
+        treated_after = matched_covariates[
+            matched_covariates["treatment_simulated"] == 1
+        ][covariate]
+        untreated_after = matched_covariates[
+            matched_covariates["treatment_simulated"] == 0
+        ][covariate]
+
+        covariate_balance.append(
+            {
+                "covariate": covariate,
+                "smd_before": _standardized_mean_difference(treated_before, untreated_before),
+                "smd_after": _standardized_mean_difference(treated_after, untreated_after),
+            }
+        )
+
     return {
         "success": True,
         "ate": ate,
@@ -293,6 +337,7 @@ def run_causal_analysis_pipeline(
         "matching_metrics": matching_metrics,
         "balance_before": balance_before,
         "balance_after": balance_after,
+        "covariate_balance": covariate_balance,
     }
 
 

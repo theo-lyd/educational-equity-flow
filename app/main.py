@@ -621,6 +621,26 @@ def render_causal_analysis() -> None:
         st.error(f"Causal analysis failed: {causal_results.get('message', 'Unknown error')}")
         return
 
+    required_keys = {
+        "ate",
+        "standard_error",
+        "ci_lower",
+        "ci_upper",
+        "n_total",
+        "n_treated",
+        "n_untreated",
+        "matching_metrics",
+        "balance_before",
+        "balance_after",
+        "covariate_balance",
+        "ps_data",
+        "matched_data",
+    }
+    missing_keys = sorted(required_keys - set(causal_results))
+    if missing_keys:
+        st.error(f"Causal analysis payload missing keys: {', '.join(missing_keys)}")
+        return
+
     # Display ATE results
     st.markdown("### Average Treatment Effect (ATE)")
     ate = causal_results["ate"]
@@ -687,6 +707,31 @@ def render_causal_analysis() -> None:
     st.caption(
         "✅ Good balance: Treated and control groups have similar propensity "
         "scores after matching. This suggests confounding is reduced."
+    )
+
+    st.markdown("#### Covariate Balance (Standardized Mean Difference)")
+    smd_df = pd.DataFrame(causal_results["covariate_balance"])
+    if not smd_df.empty:
+        smd_df = smd_df.rename(
+            columns={
+                "covariate": "Covariate",
+                "smd_before": "SMD Before",
+                "smd_after": "SMD After",
+            }
+        )
+        smd_df["SMD Before"] = smd_df["SMD Before"].map(lambda x: f"{x:.4f}")
+        smd_df["SMD After"] = smd_df["SMD After"].map(lambda x: f"{x:.4f}")
+        st.dataframe(smd_df, use_container_width=True, hide_index=True)
+    st.caption(
+        "Rule of thumb: |SMD| < 0.10 indicates strong balance, while higher values "
+        "suggest residual imbalance."
+    )
+
+    st.markdown("#### Methodology & Assumptions")
+    st.caption(
+        "Estimated with propensity-score matching on observed covariates. "
+        "Interpretation depends on assumptions: no unmeasured confounding, overlap "
+        "(positivity), and model specification. This is decision support, not proof of causality."
     )
 
     # Counterfactual scenarios

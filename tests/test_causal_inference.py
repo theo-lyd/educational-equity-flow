@@ -11,6 +11,7 @@ from src.dashboard.causal_inference import (
     estimate_propensity_score,
     format_confidence_interval,
     perform_matching,
+    run_causal_analysis_pipeline,
     simulate_counterfactual_scenario,
 )
 
@@ -171,6 +172,66 @@ class TestATE:
         ate, se, ci = estimate_ate(pd.DataFrame())
         assert ate == 0.0
         assert se == 0.0
+
+    def test_small_groups_return_point_ci(self) -> None:
+        """Very small groups return deterministic CI at point estimate."""
+        data = pd.DataFrame(
+            {
+                "treatment_simulated": [1, 0],
+                "outcome": [0.7, 0.5],
+            }
+        )
+        ate, se, ci = estimate_ate(data)
+
+        assert ate == pytest.approx(0.2, abs=0.0001)
+        assert se == 0.0
+        assert ci[0] == pytest.approx(ate, abs=0.0001)
+        assert ci[1] == pytest.approx(ate, abs=0.0001)
+
+
+class TestCausalPipelineDiagnostics:
+    """Test diagnostics produced by the causal pipeline."""
+
+    def test_pipeline_includes_covariate_balance_smd(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Pipeline returns covariate SMD diagnostics before/after matching."""
+        mock_data = pd.DataFrame(
+            {
+                "ags": ["001", "002", "003", "004", "005", "006"],
+                "region": ["A", "A", "B", "B", "C", "C"],
+                "outcome": [0.58, 0.62, 0.49, 0.52, 0.66, 0.70],
+                "transition_rate": [0.55, 0.60, 0.45, 0.48, 0.63, 0.68],
+                "leakage_score": [-0.10, -0.06, 0.12, 0.09, -0.02, -0.01],
+                "resource_category": [
+                    "LOW_LEAKAGE",
+                    "LOW_LEAKAGE",
+                    "HIGH_LEAKAGE",
+                    "HIGH_LEAKAGE",
+                    "MEDIUM_LEAKAGE",
+                    "MEDIUM_LEAKAGE",
+                ],
+            }
+        )
+
+        monkeypatch.setattr(
+            "src.dashboard.causal_inference.load_causal_inference_data",
+            lambda db_path=None: mock_data,
+        )
+        run_causal_analysis_pipeline.clear()
+        result = run_causal_analysis_pipeline(caliper=1.0)
+
+        assert result["success"] is True
+        assert "covariate_balance" in result
+        assert isinstance(result["covariate_balance"], list)
+        assert len(result["covariate_balance"]) == 2
+
+        covariates = {entry["covariate"] for entry in result["covariate_balance"]}
+        assert covariates == {"transition_rate", "leakage_score"}
+
+        for entry in result["covariate_balance"]:
+            assert "smd_before" in entry
+            assert "smd_after" in entry
+            assert isinstance(entry["smd_before"], float)
+            assert isinstance(entry["smd_after"], float)
 
 
 class TestCounterfactualScenarios:
